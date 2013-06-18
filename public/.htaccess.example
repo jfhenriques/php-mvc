@@ -1,0 +1,12 @@
+Allow from all
+
+Options -Indexes
+
+
+RewriteEngine On
+RewriteBase /
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule ^(.*)$ index.php?z_url=$1 [QSA,PT,L]
