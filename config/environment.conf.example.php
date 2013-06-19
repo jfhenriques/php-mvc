@@ -18,7 +18,7 @@
 	 *	Which type of cache to use
 	 *
 	 *	COMMON_CACHE_DISABLED	: Should never be used
-	 *  COMMON_CACHE_AUTO		: Tries firs APC and then Memcache(d) 
+	 *  COMMON_CACHE_AUTO		: Tries first APC and then Memcache(d) 
 	 *  COMMON_CACHE_APC		: Force PHP APC
 	 *  COMMON_CACHE_MEMCACHED	: Force Memcache(d)
 	 *

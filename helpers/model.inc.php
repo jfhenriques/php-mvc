@@ -42,9 +42,7 @@
 			if( isset( $this->data[$key] ) )
 				return $this->data[$key];
 
-			$this->data[$key] = $default;
-
-			return $default;
+			return ( $this->data[$key] = $default );
 		}
 
 		protected static function fillModel($data, $model)

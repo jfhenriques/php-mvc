@@ -5,10 +5,10 @@
 	DEFINE('MULTIPART_FILE',	HELPERS_DIR . '/multipart.parser.php' );
 	DEFINE('NOT_FOUND_PAGE',	PUBLIC_DIR . '/404.html' );
 	
-	DEFINE('RESPOND_DISABLED',	0x0);
-	DEFINE('RESPOND_HTML',	0x1);
-	DEFINE('RESPOND_JSON',	0x2);
-	DEFINE('RESPOND_OTHER',	0x3);
+	DEFINE('RESPOND_DISABLED',	0x0 );
+	DEFINE('RESPOND_HTML',		0x1 );
+	DEFINE('RESPOND_JSON',		0x2 );
+	DEFINE('RESPOND_OTHER',		0x3 );
 	
 	
 	class Router {
@@ -17,6 +17,7 @@
 		
 		private $url = null;
 		private $cachedRoutes = null;
+		private $cachedNamedRoutes = null;
 		private $exception = null;
 		private $controller = null;
 		private $controllerAction = null;
@@ -25,6 +26,7 @@
 		private $responseType = RESPOND_DISABLED;
 
 		const ROUTES_KEY = 'routes';
+		const NAMED_ROUTES_KEY = 'named_routes';
 	
 		private function __clone() { }
 		
@@ -33,27 +35,30 @@
 			$this->url = ( isset( $_REQUEST['z_url' ] ) && strlen( $_REQUEST['z_url' ] ) > 0 ) ? $_REQUEST['z_url' ] : "" ;
 			
 			$cc = CommonCache::getInstance();
-			//$cc_key = //CommonCache::buildVarName('cached', 'routes');
 
 			$cache = $cc->get( self::ROUTES_KEY );
+			$namedRoutes = $cc->get( self::NAMED_ROUTES_KEY );
 
 			$lastMod = @filemtime(ROUTES_FILE) ;
 			
-			if( $cache === false || !is_array( $cache ) ||
+			if( $cache === false || $namedRoutes === false ||
+				!is_array( $cache ) || !is_array( $namedRoutes ) ||
 				!isset( $cache['version'] ) || $cache['version'] !== $lastMod )
 			{
-				include_once(ROUTES_FILE);
+				include_once( ROUTES_FILE );
 				
 				$cache = array();
 				
-				$this->buildRoutes( $GLOBALS['routes'] , $lastMod !== false ? $lastMod : 0 , $cache);
+				$this->buildRoutes( $GLOBALS['routes'] , $lastMod !== false ? $lastMod : 0 , $cache, $namedRoutes );
 
 				$cc->set( self::ROUTES_KEY, $cache );
+				$cc->set( self::NAMED_ROUTES_KEY, $namedRoutes );
 				
-				//var_dump( $cache );
+				//var_dump( $cache, $namedRoutes );
 			}
 
 			$this->cachedRoutes = $cache ;
+			$this->cachedNamedRoutes = $namedRoutes ;
  
 		}
 		
@@ -115,7 +120,7 @@
 		 *
 		 */
 
-		private function buildRoutes($routes, $version, &$cached)
+		private function buildRoutes($routes, $version, &$cached, &$namedRoutes)
 		{
 			
 			function checkInArray($v, $arr)
@@ -140,8 +145,25 @@
 				$output[$name][$key] = array( 'c' => strtolower( $controller ),
 											  'a' => $action 		);
 			}
+
+			function build_tmp_named_route($name, &$named_var_count, &$named_key, &$named_resource)
+			{
+				if( !empty($name) && $name[0] === ':' )
+				{
+					//$tmp_name = substr($name, 1);
+					$named_var_count++;
+
+					//$named_key = ( empty( $named_key ) ? "$tmp_name" : "{$named_key}_{$tmp_name}" );
+					$named_resource .= "/%{$named_var_count}";
+				}
+				else
+				{
+					$named_key = ( empty( $named_key ) ? "$name" : "{$named_key}_{$name}" );
+					$named_resource .= "/{$name}";
+				}
+			}
 			
-			function processAtom( $arr, $isResource, $controller, $name, &$output )
+			function processAtom( $arr, $isResource, $controller, $name, &$output, &$named_array, $named_var_count = 0, $named_key = '', $named_resource = '')
 			{
 				if( !is_array( $arr ) )
 					$arr = array();			
@@ -155,30 +177,62 @@
 					$only = ( isset( $arr['only'] ) && count( $arr['only'] ) > 0 ) ? $arr['only'] : null ;
 					
 					Router::add_key_to_array( $name, $output );
+
+					$hasNormal = false;
+					$hasPlus = false;
+
+					$named_var_count++;
+					$named_resource = "{$named_resource}" ;
+					$named_resource_plus = "{$named_resource}/%{$named_var_count}" ;
 					
 					if( checkInArray('index', $only) )
+					{
 						insertMethod($controller, $name, 'get', 'index', $output);
-						
-					if( checkInArray('create', $only) )
-						insertMethod($controller, $name, 'post', 'create', $output);
+						$hasNormal = true;
+					}
 					
-					if( checkInArray('new', $only) )	
+					if( checkInArray('create', $only) )
+					{
+						insertMethod($controller, $name, 'post', 'create', $output);
+						$hasNormal = true;
+					}
+					
+					if( $hasNormal )
+						$named_array[$named_key] = $named_resource;
+
+					if( checkInArray('new', $only) )
+					{
 						insertMethod($controller, 'new', 'get', 'mnew', $output[$name]);
+						$named_array["{$named_key}_new"] = "{$named_resource_plus}/new";
+					}
 
 					if( checkInArray('show', $only) )
+					{
 						insertMethod($controller, $id, 'get', 'show', $output[$name]);
+						$hasPlus = true;
+					}
 						
 					if( checkInArray('update', $only) )
+					{
 						insertMethod($controller, $id, 'put', 'update', $output[$name]);
+						$hasPlus = true;
+					}
 
 					if( checkInArray('destroy', $only) )
+					{
 						insertMethod($controller, $id, 'delete', 'destroy', $output[$name]);
+						$hasPlus = true;
+					}
+
+					if( $hasPlus )
+						$named_array["{$named_key}_"] = $named_resource_plus;
 						
 					if( checkInArray('edit', $only) )
 					{
 						Router::add_key_to_array( $id, $output[$name] );
 							
 						insertMethod($controller, 'edit', 'get', 'edit', $output[$name][$id]);
+						$named_array["{$named_key}_edit"] = "{$named_resource_plus}/edit";
 					}
 				}
 				else
@@ -188,31 +242,46 @@
 						$via = isset( $arr['via'] ) ? $arr['via'] : 'get' ;
 					
 						insertMethod($controller, $name, $via, $arr['action'], $output);
+
+						$named_key = ( isset( $arr['as'] ) && $arr['as'] !== '' ) ? $arr['as'] : $named_key ;
+
+						if( !is_null( $named_key ) && $named_key !== false )
+						{
+							build_tmp_named_route($name, $named_var_count, $named_key, $named_resource );
+							$named_array[$named_key] = $named_resource;
+						}
 					}
 				}
 				
 			}
 			
-			function processResources($arr, &$output)
+			function processResources($arr, &$output, &$named_array, $named_var_count = 0, $named_key = '', $named_resource = '' )
 			{
 				if( !is_array( $arr ) )
 					return;
+
+				$named_var_count_plus = $named_var_count + 1 ;
 				
 				foreach( $arr as $key => $val )
 				{
 					if( $key[0] == ':' )
 					{
 						$name = verifyName( substr($key, 1) );
+
+						$tmp_named_key = ( empty( $named_key ) ? "$name" : "{$named_key}_{$name}" ) ;
+						$tmp_named_resource = "{$named_resource}/{$name}";
 						
-						processAtom( $val, true, $name, $name, $output );
+						processAtom( $val, true, $name, $name, $output, $named_array, $named_var_count, $tmp_named_key, $tmp_named_resource );
 						
 						Router::add_key_to_array( $name, $output );
 							
 						if( is_array( $val ) && count( $val ) > 0 )
 						{
 							Router::add_key_to_array( $key, $output[$name] );
+
+							$tmp_named_resource .= "/%{$named_var_count_plus}";
 								
-							processResources( $val, $output[$name][$key] );
+							processResources( $val, $output[$name][$key], $named_array, $named_var_count_plus, $tmp_named_key, $tmp_named_resource );
 						}
 					
 					}
@@ -226,7 +295,7 @@
 			 *	Processa recursivamente o namespace e os seus recursos
 			 ***************************************************************************************************/
 			 
-			function processNamespace( $arr, &$output )
+			function processNamespace( $arr, &$output, &$named_array, $named_key = '', $named_resource = '' )
 			{
 				if( isset( $arr['namespace'] ) && is_array( $arr['namespace'] ) )
 				{
@@ -236,17 +305,20 @@
 							continue;
 
 						Router::add_key_to_array( $space['name'], $output );
+
+						$tmp_named_key = ( empty( $named_key ) ? "{$space['name']}" : "{$named_key}_{$space['name']}" );
+						$tmp_named_resource = "{$named_resource}/{$space['name']}";
 						
-						processNamespace( $space, $output[ $space['name'] ] );
+						processNamespace( $space, $output[ $space['name'] ], $named_array, $tmp_named_key, $tmp_named_resource );
 					}
 				}
 				
 				if( isset( $arr['resources'] ) && is_array( $arr['resources'] ) )
-					processResources( $arr['resources'], $output );
+					processResources( $arr['resources'], $output, $named_array, 0, $named_key, $named_resource );
 					
 			}
 
-			function processMatches( $arr, &$output )
+			function processMatches( $arr, &$output, &$named_array, $named_var_count = 0, $named_key = '', $named_resource = '' )
 			{
 				if( isset( $arr['matches'] ) && is_array( $arr['matches'] ) )
 				{
@@ -259,6 +331,9 @@
 						
 						$i = 0;
 						$val = null;
+						$tmp_named_var_count = $named_var_count ;
+						$tmp_named_key = "{$named_key}";
+						$tmp_named_resource = "{$named_resource}";
 
 						$lastLevel = &$output;
 						
@@ -274,14 +349,21 @@
 
 							Router::add_key_to_array( $val, $lastLevel );
 
-							if( Router::hasNext( $i, $exp ) === false )
-								processAtom( $rule, false, $controller, $val, $lastLevel );
+							if( Router::hasNext( $i, $exp ) !== false )
+								build_tmp_named_route($val, $tmp_named_var_count, $tmp_named_key, $tmp_named_resource );
+
+							else
+								processAtom( $rule, false, $controller, $val, $lastLevel, $named_array, $tmp_named_var_count, $tmp_named_key, $tmp_named_resource );
+								
 
 							$lastLevel = &$lastLevel[$val] ;
 						}
 
 						if( !is_null( $val ) )
-							processMatches( $rule, $lastLevel );
+						{
+							build_tmp_named_route($val, $tmp_named_var_count, $tmp_named_key, $tmp_named_resource );
+							processMatches( $rule, $lastLevel, $named_array, $tmp_named_var_count, $tmp_named_key, $tmp_named_resource );
+						}
 					}
 				}
 			}
@@ -325,12 +407,14 @@
 			$cached['rules'] = array();
 			$cached['version'] = $version;
 			$cached['root'] = ( isset($routes['root']) && is_string( $routes['root'] ) ) ? $routes['root'] : null;
+
+			$namedRoutes = array();
 			
 			// Process Namespace / resources
-			processNamespace( $routes, $cached['rules'] );
+			processNamespace( $routes, $cached['rules'], $namedRoutes );
 
 			// Process Matches
-			processMatches( $routes, $cached['rules'] );
+			processMatches( $routes, $cached['rules'], $namedRoutes );
 
 			// Clean possible empty array tails
 			recursiveArrayClean( $cached );
