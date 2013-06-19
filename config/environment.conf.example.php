@@ -62,6 +62,7 @@
 
 	/*
 	 *	Leave empy if the website is in the root (namespaces don't count)
+	 *	If not empty, BASE_URI must start and do not end with a slash
 	 */
 	DEFINE( 'BASE_URI', '' );
 

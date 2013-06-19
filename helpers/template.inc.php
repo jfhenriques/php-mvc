@@ -19,16 +19,17 @@
 		}
 		
 		
-		public function render( $view )
+		public function renderDirect( $view_file, $router = null )
 		{
-			$router = Router::getInstance();
-			
-			$view_file = VIEWS_DIR . "/{$router->getControllerName()}/{$view}.html.php" ;
+			$router = is_null( $router ) ? Router::getInstance() : $router ;
 			
 			if( !is_file( $view_file ) )
 				throw new Exception( "View file '{$view_file}' does not exist" );
 				
 			$data = $this->data ;
+
+			header('Content-type: text/html; charset=utf-8', true);
+
 			
 			if( $this->include_headers )
 				include_once( PAGE_HEADER );
@@ -39,6 +40,12 @@
 				include_once( PAGE_FOOTER );
 		}
 
+		public function render( $view )
+		{
+			$router = Router::getInstance();
+
+			return $this->renderDirect( VIEWS_DIR . "/{$router->getControllerName()}/{$view}.html.php", $router ) ;
+		}
 
 		public function renderHTML( $html )
 		{

@@ -111,6 +111,42 @@
 		{
 			return $this->controllerFound ;
 		}
+
+
+		public function getPath($named_route)
+		{
+			$route = null;
+
+			if( is_null( $this->cachedNamedRoutes ) ||
+				!isset( $this->cachedNamedRoutes[$named_route] ) )
+				return false;
+
+			$base = BASE_URI ;
+			$route = "/{$base}{$this->cachedNamedRoutes[$named_route]}";
+
+			$num_args = func_num_args();
+
+			if( $num_args == 2 )
+				return str_replace( "%1", func_get_arg(1), $route );
+
+			else
+			if( $num_args > 2 )
+			{
+				$needle = array();
+				$replace = array();
+
+				for($i = 1; $i < $num_args; $i++)
+				{
+					$needle[] = "%{$i}" ;
+					$replace[] = func_get_arg( $i );
+				}
+
+				return str_replace( $needle, $replace, $route );
+			}
+			
+			return $route;
+		}
+
 		
 
 		
@@ -146,6 +182,12 @@
 											  'a' => $action 		);
 			}
 
+			function build_tmp_path($named_resource, $name, $isVar = false)
+			{
+				$name = $isVar ? "%{$name}": $name ;
+				return ( $named_resource === '' ? $name : "{$named_resource}/{$name}" ) ;
+			}
+
 			function build_tmp_named_route($name, &$named_var_count, &$named_key, &$named_resource)
 			{
 				if( !empty($name) )
@@ -154,12 +196,14 @@
 					{
 						$named_var_count++;
 						
-						$named_resource .= "/%{$named_var_count}";
+						//$named_resource .= "/%{$named_var_count}";
+						$named_resource = build_tmp_path($named_resource, $named_var_count, true);
 					}
 					else
 					{
 						$named_key = ( empty( $named_key ) ? "$name" : "{$named_key}_{$name}" );
-						$named_resource .= "/{$name}";
+						//$named_resource .= "/{$name}";
+						$named_resource = build_tmp_path($named_resource, $name);
 					}
 				}
 			}
@@ -183,8 +227,9 @@
 					$hasPlus = false;
 
 					$named_var_count++;
-					$named_resource = "{$named_resource}" ;
-					$named_resource_plus = "{$named_resource}/%{$named_var_count}" ;
+					$named_resource = $named_resource ;
+					//$named_resource_plus = "{$named_resource}/%{$named_var_count}" ;
+					$named_resource_plus = build_tmp_path($named_resource, $named_var_count, true);
 					
 					if( checkInArray('index', $only) )
 					{
@@ -204,7 +249,7 @@
 					if( checkInArray('new', $only) )
 					{
 						insertMethod($controller, 'new', 'get', 'mnew', $output[$name]);
-						$named_array["{$named_key}_new"] = "{$named_resource_plus}/new";
+						$named_array["{$named_key}_new"] = build_tmp_path($named_resource_plus, 'new'); //"{$named_resource_plus}/new";
 					}
 
 					if( checkInArray('show', $only) )
@@ -233,7 +278,7 @@
 						Router::add_key_to_array( $id, $output[$name] );
 							
 						insertMethod($controller, 'edit', 'get', 'edit', $output[$name][$id]);
-						$named_array["{$named_key}_edit"] = "{$named_resource_plus}/edit";
+						$named_array["{$named_key}_edit"] = build_tmp_path($named_resource_plus, 'edit'); //"{$named_resource_plus}/edit";
 					}
 				}
 				else
@@ -270,7 +315,8 @@
 						$name = verifyName( substr($key, 1) );
 
 						$tmp_named_key = ( empty( $named_key ) ? "$name" : "{$named_key}_{$name}" ) ;
-						$tmp_named_resource = "{$named_resource}/{$name}";
+						$tmp_named_resource = build_tmp_path( $named_resource, $name );
+						//$tmp_named_resource = "{$named_resource}/{$name}";
 						
 						processAtom( $val, true, $name, $name, $output, $named_array, $named_var_count, $tmp_named_key, $tmp_named_resource );
 						
@@ -280,7 +326,9 @@
 						{
 							Router::add_key_to_array( $key, $output[$name] );
 
-							$tmp_named_resource .= "/%{$named_var_count_plus}";
+							//$tmp_named_resource .= "/%{$named_var_count_plus}";
+							$tmp_named_resource = build_tmp_path($tmp_named_resource, $named_var_count_plus, true );
+							
 								
 							processResources( $val, $output[$name][$key], $named_array, $named_var_count_plus, $tmp_named_key, $tmp_named_resource );
 						}
@@ -308,7 +356,8 @@
 						Router::add_key_to_array( $space['name'], $output );
 
 						$tmp_named_key = ( empty( $named_key ) ? "{$space['name']}" : "{$named_key}_{$space['name']}" );
-						$tmp_named_resource = "{$named_resource}/{$space['name']}";
+						//$tmp_named_resource = "{$named_resource}/{$space['name']}";
+						$tmp_named_resource = build_tmp_path( $named_resource, $space['name'] );
 						
 						processNamespace( $space, $output[ $space['name'] ], $named_array, $tmp_named_key, $tmp_named_resource );
 					}
@@ -333,8 +382,8 @@
 						$i = 0;
 						$val = null;
 						$tmp_named_var_count = $named_var_count ;
-						$tmp_named_key = "{$named_key}";
-						$tmp_named_resource = "{$named_resource}";
+						$tmp_named_key = $named_key;
+						$tmp_named_resource = $named_resource;
 
 						$lastLevel = &$output;
 						

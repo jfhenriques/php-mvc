@@ -145,7 +145,7 @@
 			if( is_null( $src ) )
 				return null;
 			
-			return ( USE_STATIC_URI ? BASE_STATIC_URI : ( '/' . BASE_URI ) ) . $src ;
+			return ( USE_STATIC_URI ? BASE_STATIC_URI : ( BASE_URI . '/' ) ) . $src ;
 		}
 
 
