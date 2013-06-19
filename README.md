@@ -1,4 +1,4 @@
 php_mvc
 =======
 
-PHP MVC Framework
+MVC Framework root dir
