@@ -148,18 +148,19 @@
 
 			function build_tmp_named_route($name, &$named_var_count, &$named_key, &$named_resource)
 			{
-				if( !empty($name) && $name[0] === ':' )
+				if( !empty($name) )
 				{
-					//$tmp_name = substr($name, 1);
-					$named_var_count++;
-
-					//$named_key = ( empty( $named_key ) ? "$tmp_name" : "{$named_key}_{$tmp_name}" );
-					$named_resource .= "/%{$named_var_count}";
-				}
-				else
-				{
-					$named_key = ( empty( $named_key ) ? "$name" : "{$named_key}_{$name}" );
-					$named_resource .= "/{$name}";
+					if( $name[0] === ':' )
+					{
+						$named_var_count++;
+						
+						$named_resource .= "/%{$named_var_count}";
+					}
+					else
+					{
+						$named_key = ( empty( $named_key ) ? "$name" : "{$named_key}_{$name}" );
+						$named_resource .= "/{$name}";
+					}
 				}
 			}
 			
