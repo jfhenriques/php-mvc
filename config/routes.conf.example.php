@@ -5,13 +5,13 @@
 		
 		
 		/*****************************************************************************************
-		 *	Namespace e resources
-		 *	Os namespace podem ser nested
+		 *	Namespace and resources
+		 *	Namespaces can be directly nested
 		 *****************************************************************************************/
 		 
 		'namespace' => array(
 			
-			array( 'name' => 'api',		// Sem barras nem espaços, de preferência só letras
+			array( 'name' => 'api',		// Must not contain slashed nor spaces
 				   
 				   'resources' => array(
 					
@@ -25,9 +25,8 @@
 		
 		
 		/*****************************************************************************************
-		 *	Qual o caminho que será a raíz.
-		 *	Nesta raíz será chamado o método "show", como GET.
-		 *	Só funciona na raíz de todo o projecto, e não funciona para namespaces
+		 *	Which uri will be the root
+		 *	This will make a call to the uri, by a GET action
 		 *****************************************************************************************/
 		
 		'root' => 'home',

@@ -6,8 +6,8 @@
 
 	$init_time = microtime(true);
 	
-	// Força o output a ser redirecionado para o buffer,
-	// e sendo enviado para o browser do utulizador apenas no final.
+	// Forces the output to be redirected to the buffer,
+	// being sent only to the client's browser when all php code has executed
 	ob_start();
 
 
