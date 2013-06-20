@@ -576,6 +576,7 @@
 				if( isset( $lastValue[ $key ] ) && is_array( $lastValue[ $key ] ) )
 				{
 					$act = $lastValue[ $key ] ;
+					
 					if( isset( $act['a'] ) && isset( $act['c'] ) )
 					{
 						if( $key === "#PUT" || $key === "#DELETE" )

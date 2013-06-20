@@ -7,6 +7,7 @@
 
 function parse_raw_http_request()
 {
+
     if( !isset( $_SERVER['CONTENT_TYPE'] ) )
       return;
 
@@ -22,7 +23,10 @@ function parse_raw_http_request()
       if( count( $arrOut ) > 0 )
       {
         foreach($arrOut as $k => $val )
-          $_REQUEST[$k] = $val;
+        {
+          //if( !isset( $_REQUEST[$k] ) )
+            $_REQUEST[$k] = $val;
+        }
       }
 
       return;
@@ -43,7 +47,9 @@ function parse_raw_http_request()
         if ( count($matches) == 0 )
         {
           preg_match('/name=\"([^\"]*)\"[\n|\r]+([^\n\r].*)?\r$/s', $block, $matches);
-          $_REQUEST[$matches[1]] = isset( $matches[2] ) ? $matches[2] : "" ;
+
+          //if( !isset( $_REQUEST[$matches[1]] ) )
+            $_REQUEST[$matches[1]] = isset( $matches[2] ) ? $matches[2] : "" ;
         }
         else
         {

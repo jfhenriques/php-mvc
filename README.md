@@ -3,7 +3,7 @@ PHP MVC Framework
 
 Small and efficient PHP MCV Framework.
 
-This framework was developed for a project, following the MVC design pattern,
+I developed this framework, following the MVC design pattern, for a project,
 now it was stripped from it, and released independently.
 
 
