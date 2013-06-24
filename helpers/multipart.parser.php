@@ -20,13 +20,10 @@ function parse_raw_http_request()
       $arrOut = array();
       @parse_str($input, $arrOut);
 
-      if( count( $arrOut ) > 0 )
+      foreach($arrOut as $k => $val )
       {
-        foreach($arrOut as $k => $val )
-        {
-          //if( !isset( $_REQUEST[$k] ) )
-            $_REQUEST[$k] = $val;
-        }
+        //if( !isset( $_REQUEST[$k] ) )
+          $_REQUEST[$k] = $val;
       }
 
       return;

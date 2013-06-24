@@ -9,7 +9,7 @@
 	/*
 	 *	PDO configuration
 	 */
-	DEFINE('PDO_DATABASE', 'mysql:host=localhost;dbname=!!DB_NAME_HERE!!;charset=UTF-8' );
+	DEFINE('PDO_DATABASE', 'mysql:host=127.0.0.1;dbname=!!DB_NAME_HERE!!;charset=UTF-8' );
 	DEFINE('PDO_USERNAME', '!!DB_USER_HERE!!');
 	DEFINE('PDO_PASSWORD', '!!DB_PASS_HERE!!');
 	
