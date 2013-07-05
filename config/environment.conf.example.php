@@ -34,7 +34,12 @@
 	
 	
 	/*
-	 *	Forces flush of memcache(d) or APC. Usefull for test purposes
+	 *	Forces memcache(d) or APC to ALWAYS flush their cache before being used.
+	 *	This is only usefull for development purposes, and setting this to true
+	 *	on production environments may lead to catastrophic events.
+	 *	Lets say you using memcached for cache, and using it too for php session handling,
+	 *	flushing the whole cache will make all other applications' clients to loose their session data.
+	 *	The imaginary scenarios that can come out because of flushing the cache are endless.
 	 */
 	DEFINE( 'COMMON_CACHE_FORCE_FLUSH'	,	false );
 
@@ -44,7 +49,6 @@
 	 * 	cached variables/arrays/etc can be distinguished from other applications
 	 * 	who are using the cache
 	 */
-	 
 	DEFINE( 'COMMON_CACHE_VAR_PREFIX'	,	'cc' );
 	
 	
@@ -82,3 +86,32 @@
 	 */
 	DEFINE( 'BASE_STATIC_URI', "http://{$_SERVER['SERVER_NAME']}/" . BASE_URI );
 
+
+	/*
+	 *	Wether or not to check the last modification of the ROUTES file.
+	 *	If disabled, you need to manually flush your server cache every 
+	 *	you change this file and deploy it to your server.
+	 */
+	DEFINE( 'MTIME_ROUTES_FILE', true );
+
+
+	/*
+	 *	If set to true, all you cache will be flushed when the ROUTES file change.
+	 *	Usefull for making your application be aware of new controllers/plugins
+	 *	that have been added to your application, when you don't want to manually flush.
+	 *
+	 *	Requires the flag 'MTIME_ROUTES_FILE' set to true
+	 *	
+	 *	If using git/svn/etc, and you save your ROUTES file without changing anything only to update the mtime,
+	 *	your file will not be sent to the repo, and when you pull the changes on the production
+	 *	environment the application will not be aware that a flush is needed. You may want to
+	 *	had a comment with some kind of version number on the routes file, and increase it when needed
+	 *	before commiting to the repo.
+	 *	The ROUTES file was choosen for mtime check, because it is will, almost without any doubt,
+	 *	be changed if a new controller is added, making you to reconfigure your routes.
+	 *
+	 *	This does not flush the whole cache as in 'COMMON_CACHE_FORCE_FLUSH', only deletes internally used
+	 *	variables, making them to be rebuilt.
+	 *	If your using cached queries or any other kind of variable set with CommonCache, it will NOT be deleted.
+	 */
+	DEFINE( 'FLUSH_CACHE_ON_ROUTES_CHANGE', true );

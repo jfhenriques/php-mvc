@@ -1,7 +1,7 @@
 <?php
 
-	DEFINE('PAGE_HEADER', VIEWS_DIR . '/header.html.php');
-	DEFINE('PAGE_FOOTER', VIEWS_DIR . '/footer.html.php');
+	DEFINE('PAGE_HEADER', VIEWS_DIR . 'header.html.php');
+	DEFINE('PAGE_FOOTER', VIEWS_DIR . 'footer.html.php');
 
 	class Template {
 		
@@ -44,7 +44,7 @@
 		{
 			$router = Router::getInstance();
 
-			return $this->renderDirect( VIEWS_DIR . "/{$router->getControllerName()}/{$view}.html.php", $router ) ;
+			return $this->renderDirect( VIEWS_DIR . "{$router->getControllerName()}" . DS . "{$view}.html.php", $router ) ;
 		}
 
 		public function renderHTML( $html )

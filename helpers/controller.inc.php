@@ -66,6 +66,7 @@
 	
 		public $respond = null;
 		private $requireAuth = false;
+		protected $router = null;
 		
 		private static $authFunction = null;
 		
@@ -75,7 +76,8 @@
 		public function __construct()
 		{
 			$this->respond = new Template();
-			
+			$this->router = Router::getInstance();
+
 			$this->__configure();
 		}
 		

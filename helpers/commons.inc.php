@@ -19,7 +19,7 @@
 
 		function my_exception_handler($exception)
 		{
-			require_once( HELPERS_DIR .'/print_error.inc.php' );
+			require_once( HELPERS_DIR . 'print_error.inc.php' );
 			
 			error_log( $exception );
 			dumpException( $exception );
@@ -57,7 +57,7 @@
 
 		ini_set('log_errors', 1);
 		ini_set('ignore_repeated_errors', 1);
-		ini_set('error_log', TMP_DIR . '/error.log.txt' );
+		ini_set('error_log', TMP_DIR . 'error.log.txt' );
 		
 		
 		/**********************************************************************************
@@ -202,6 +202,28 @@
 			}
 		
 		}
+
+
+		/**********************************************************************************
+		 *	Check if routes file have changed
+		 **********************************************************************************/
+
+		if( MTIME_ROUTES_FILE )
+		{
+			$cc = CommonCache::getInstance();
+
+			$cache = $cc->get( CACHE_VERSION_VAR );
+			$lastMod = @filemtime( ROUTES_FILE ) ;
+
+			DEFINE( 'CACHE_VERSION', ( $lastMod !== false ) ? $lastMod : 0 );
+			DEFINE( 'VERSION_HAS_CHANGED', $cache === false || $cache !== CACHE_VERSION );
+		}
+		else
+		{
+			DEFINE( 'CACHE_VERSION', false );
+			DEFINE( 'VERSION_HAS_CHANGED', false );	
+		}
+
 		
 		/**********************************************************************************
 		 *	Class autoloader
@@ -217,30 +239,28 @@
 			private $cachedPlugins = array();
 			private $cc = null;
 			
-			private $class_search_path = array( array( 'name' => 'model',
-													   'path' => MODELS_DIR  ),
-												array( 'name' => 'controller',
-													   'path' => CONTROLLERS_DIR,
-													   'incName' => true ),
-												array( 'name' => 'plugin',
-													   'path' => PLUGINS_DIR,
-													   'incName' => true,
-													   'isPlugin' => true ) );
-			
 			private function __clone() { }
 			private function __construct()
 			{
 				$this->cc = CommonCache::getInstance();
 
-				$this->cachedNames = $this->cc->get( self::NAMES_KEY );
-				$this->cachedPlugins = $this->cc->get( self::PLUGINS_KEY );
+				if( VERSION_HAS_CHANGED && FLUSH_CACHE_ON_ROUTES_CHANGE )
+				{
+					$this->cachedNames = false;
+					$this->cachedPlugins = false;
+				}
+				else
+				{
+					$this->cachedNames = $this->cc->get( self::NAMES_KEY );
+					$this->cachedPlugins = $this->cc->get( self::PLUGINS_KEY );
+				}
 
 				if(    $this->cachedNames === false || !is_array( $this->cachedNames )
 					|| $this->cachedPlugins === false || !is_array( $this->cachedPlugins ) )
 				{
 					$this->getLists($this->cachedNames, $this->cachedPlugins);
 
-					$this->cacheArrays();
+					$this->saveArrayCache();
 				}
 			}
 			
@@ -261,17 +281,26 @@
 				return $this->cachedPlugins;
 			}
 			
-			private function cacheArrays()
+			private function saveArrayCache()
 			{
 				$this->cc->set( self::NAMES_KEY , $this->cachedNames );
 				$this->cc->set( self::PLUGINS_KEY , $this->cachedPlugins );
 			}
 			private function getLists( &$output, &$plugins )
 			{
+				$class_search_path = array( array( 'name' => 'model',
+												   'path' => MODELS_DIR  ),
+											array( 'name' => 'controller',
+												   'path' => CONTROLLERS_DIR,
+												   'incName' => true ),
+											array( 'name' => 'plugin',
+												   'path' => PLUGINS_DIR,
+												   'incName' => true,
+												   'isPlugin' => true ) );
 				$output = array();
 				$plugins = array();
 				
-				foreach( $this->class_search_path as $arr )
+				foreach( $class_search_path as $arr )
 				{
 				
 					if( !is_array( $arr ) || !isset( $arr['name'] ) || !isset( $arr['path'] ) )
@@ -282,7 +311,7 @@
 					
 					$name = strtolower( $arr['name'] );
 					$classType = ucfirst( $name );
-					$dir = "{$arr['path']}/";
+					$dir = "{$arr['path']}" ;
 					
 					if( $handle = @opendir( $dir ) )
 					{
@@ -292,7 +321,9 @@
 							{
 								$exp = explode('.', $entry, 3);
 								
-								if( count( $exp ) == 3 && strtolower($exp[1]) == $name )
+								if( count( $exp ) == 3
+									&& strtolower($exp[1]) == $name
+									&& strtolower($exp[2]) == 'php' )
 								{
 									$key = ucfirst( $exp[0] ) . ( $incName ? $classType : '' ) ;
 									$file = $dir . $entry ;
@@ -321,7 +352,7 @@
 					if( !is_readable( $file ) || !is_file( $file ) )
 					{
 						unset( $this->cachedNames[$name] );
-						$this->cacheArrays();
+						$this->saveArrayCache();
 					}
 					else
 					{

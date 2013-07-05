@@ -1,9 +1,8 @@
 <?php
 
 	
-	DEFINE('ROUTES_FILE',		CONF_DIR . '/routes.conf.php' );
-	DEFINE('MULTIPART_FILE',	HELPERS_DIR . '/multipart.parser.php' );
-	DEFINE('NOT_FOUND_PAGE',	PUBLIC_DIR . '/404.html' );
+	DEFINE('MULTIPART_FILE',	HELPERS_DIR . 'multipart.parser.php' );
+	DEFINE('NOT_FOUND_PAGE',	PUBLIC_DIR . '404.html' );
 	
 	DEFINE('RESPOND_DISABLED',	0x0 );
 	DEFINE('RESPOND_HTML',		0x1 );
@@ -36,25 +35,30 @@
 			
 			$cc = CommonCache::getInstance();
 
-			$cache = $cc->get( self::ROUTES_KEY );
-			$namedRoutes = $cc->get( self::NAMED_ROUTES_KEY );
+			$cache = false;
+			$namedRoutes = false;
 
-			$lastMod = @filemtime(ROUTES_FILE) ;
+			if( !VERSION_HAS_CHANGED )
+			{
+				$cache = $cc->get( self::ROUTES_KEY );
+				$namedRoutes = $cc->get( self::NAMED_ROUTES_KEY );
+			}
 			
 			if( $cache === false || $namedRoutes === false ||
-				!is_array( $cache ) || !is_array( $namedRoutes ) ||
-				!isset( $cache['version'] ) || $cache['version'] !== $lastMod )
+				!is_array( $cache ) || !is_array( $namedRoutes ) )
 			{
 				include_once( ROUTES_FILE );
 				
 				$cache = array();
 				
-				$this->buildRoutes( $GLOBALS['routes'] , $lastMod !== false ? $lastMod : 0 , $cache, $namedRoutes );
-
+				$version = ( CACHE_VERSION === false ? @filemtime( ROUTES_FILE ) : CACHE_VERSION ) ;
+				$this->buildRoutes( $GLOBALS['routes'] , $cache, $namedRoutes );
+				
 				$cc->set( self::ROUTES_KEY, $cache );
 				$cc->set( self::NAMED_ROUTES_KEY, $namedRoutes );
+				$cc->set( CACHE_VERSION_VAR, $version );
 				
-				//var_dump( $cache, $namedRoutes );
+				//var_dump( $cache, $namedRoutes, $version );
 			}
 
 			$this->cachedRoutes = $cache ;
@@ -156,7 +160,7 @@
 		 *
 		 */
 
-		private function buildRoutes($routes, $version, &$cached, &$namedRoutes)
+		private function buildRoutes($routes, &$cached, &$namedRoutes)
 		{
 			
 			function checkInArray($v, $arr)
@@ -188,7 +192,7 @@
 				return ( $named_resource === '' ? $name : "{$named_resource}/{$name}" ) ;
 			}
 
-			function build_tmp_named_route($name, &$named_var_count, &$named_key, &$named_resource)
+			function build_tmp_named_route($name, &$named_var_count, &$named_key, &$named_resource, $is_match = false)
 			{
 				if( !empty($name) )
 				{
@@ -201,7 +205,12 @@
 					}
 					else
 					{
-						$named_key = ( empty( $named_key ) ? "$name" : "{$named_key}_{$name}" );
+						$named_key = ( empty( $named_key ) ?
+												"$name" :
+												( $is_match ?
+													$named_key :
+													"{$named_key}_{$name}" ) );
+
 						//$named_resource .= "/{$name}";
 						$named_resource = build_tmp_path($named_resource, $name);
 					}
@@ -293,7 +302,7 @@
 
 						if( !is_null( $named_key ) && $named_key !== false )
 						{
-							build_tmp_named_route($name, $named_var_count, $named_key, $named_resource );
+							build_tmp_named_route($name, $named_var_count, $named_key, $named_resource, true );
 							$named_array[$named_key] = $named_resource;
 						}
 					}
@@ -455,7 +464,6 @@
 
 				
 			$cached['rules'] = array();
-			$cached['version'] = $version;
 			$cached['root'] = ( isset($routes['root']) && is_string( $routes['root'] ) ) ? $routes['root'] : null;
 
 			$namedRoutes = array();

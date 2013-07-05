@@ -1,6 +1,6 @@
 <?php
 	
-	DEFINE('API_VERSION', 20130619);
+	DEFINE('API_VERSION', 20130705);
 
 
 
@@ -15,31 +15,32 @@
 	 * Some usefull defines
 	 */
 		
-		DEFINE('ROOT', dirname(__FILE__) );
 
-		if( !defined('MVC_INSTANCE_DIR') )
-			define('MVC_INSTANCE_DIR', ROOT);
+		DEFINE('ROOT', __DIR__ );
 
-		DEFINE('HELPERS_DIR',		ROOT . '/helpers');
+		defined('MVC_INSTANCE_DIR') or DEFINE('MVC_INSTANCE_DIR', ROOT );
+		defined('DS') or define('DS', DIRECTORY_SEPARATOR);
+
+		DEFINE('HELPERS_DIR', ROOT .  DS . 'helpers' . DS );
 
 
 	/*
 	 * Include everything needed by the framework
 	 */
 
-		require_once( HELPERS_DIR . '/defines.inc.php' );
+		require_once( HELPERS_DIR . 'defines.inc.php' );
 
-		require_once( CONF_DIR . '/environment.conf.php' );
+		require_once( CONF_DIR . 'environment.conf.php' );
 		
-		require_once( HELPERS_DIR . '/commons.inc.php');
+		require_once( HELPERS_DIR . 'commons.inc.php');
 		
-		require_once( HELPERS_DIR . '/router.inc.php');
-		require_once( HELPERS_DIR . '/template.inc.php');
-		require_once( HELPERS_DIR . '/model.inc.php');
+		require_once( HELPERS_DIR . 'router.inc.php');
+		require_once( HELPERS_DIR . 'template.inc.php');
+		require_once( HELPERS_DIR . 'model.inc.php');
 		
-		require_once( HELPERS_DIR . '/controller.inc.php');
+		require_once( HELPERS_DIR . 'controller.inc.php');
 		
-		require_once( HELPERS_DIR . '/plugin.inc.php');
+		require_once( HELPERS_DIR  . 'plugin.inc.php');
 
 
 	/*
