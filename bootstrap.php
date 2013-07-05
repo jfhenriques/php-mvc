@@ -47,6 +47,12 @@
 	 * Start the real thing
 	 */
 
+		if( USE_PHPLESS )
+		{
+			require_once( USE_PHPLESS !== true ? USE_PHPLESS : ( HELPERS_DIR . 'lessc.inc.php' ) );
+			Template::compileLessFiles();
+		}
+
 		Plugin::loadPlugins();
 
 		$router = Router::getInstance();

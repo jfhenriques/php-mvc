@@ -115,3 +115,45 @@
 	 *	If your using cached queries or any other kind of variable set with CommonCache, it will NOT be deleted.
 	 */
 	DEFINE( 'FLUSH_CACHE_ON_ROUTES_CHANGE', true );
+
+
+	/*
+	 *	Use phpless: http://leafo.net/lessphp
+	 *	
+	 *	You can set to true to use the destributed version of phpless or set it to the full path
+	 *	of your own version. Setting it to false disables it.
+	 *
+	 *	Its recommended that you use the javascript version of less in development environments,
+	 *	and set this to true only in production.
+	 */
+	DEFINE( 'USE_PHPLESS', false );
+
+
+	/*
+	 *	Use the builtin less mechanism (provided by phpless) to compile each less file and concat in one css.
+	 *
+	 *	The resulting file will only be compiled if the mtime of ROUTES file has changed (needs 'MTIME_ROUTES_FILE')
+	 *	or the resulting css file is deleted.
+	 *
+	 *	As the framework is designed to be the most efficient possible, the use of less in a production
+	 *	environment is highly discouraged. For instance, for each less file, aditional computation needs
+	 *	to be made. A way arround is to pre-compile each less file in its corresponding css.
+	 *	For added performance boost, its a good practice to compile in a single file every css used
+	 *	by the whole website.
+	 *	You can provide every less file, separated by comma here.
+	 *	The less files will be searched on the root directory 'less'.
+	 */
+	DEFINE( 'LESS_FILES', '' );
+
+
+	/*
+	 *	If 'USE_PHPLESS' is true and a list of files is provided,
+	 *	you can specify the name of the resulting compiled file, created in the public dir.
+	 */
+	DEFINE( 'RESULTING_CSS', 'styles.css' );
+
+
+	/*
+	 *	Always recompile less files in development enviornoment
+	 */
+	DEFINE( 'DEV_ALWAYS_RECOMPILE_LESS', false );

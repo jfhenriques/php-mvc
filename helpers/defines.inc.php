@@ -8,6 +8,7 @@
 	DEFINE('PLUGINS_DIR',		MVC_INSTANCE_DIR . DS . 'plugins' . DS );
 	DEFINE('PUBLIC_DIR',		MVC_INSTANCE_DIR . DS . 'public' . DS );
 	DEFINE('TMP_DIR',			MVC_INSTANCE_DIR . DS . 'tmp' . DS );
+	DEFINE('LESS_DIR',			MVC_INSTANCE_DIR . DS . 'less' . DS );
 
 	DEFINE('ROUTES_FILE',		CONF_DIR . 'routes.conf.php' );
 
