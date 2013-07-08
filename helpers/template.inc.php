@@ -136,10 +136,10 @@
 						throw new Exception("Error while truncating '${cssfile}'.");	
 
 					$less = new lessc;
-					//$less->setFormatter("compressed");
+					$less->setFormatter("compressed");
 
 					$less->setVariables(array(
-					  					'@DEVELOPMENT' => DEVELOPMENT_ENVIRONMENT,
+					  					'@ENVIRONMENT' => DEVELOPMENT_ENVIRONMENT ? 'development' : 'production',
 					  					'@BASE_URI' => BASE_URI ) );
 
 					foreach(explode( ',', LESS_FILES ) AS $f)

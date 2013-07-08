@@ -3,7 +3,7 @@
 	/* 
 	 *	Must always be set to false on prodution environments
 	 */
-	DEFINE('DEVELOPMENT_ENVIRONMENT', false);
+	DEFINE('DEVELOPMENT_ENVIRONMENT', false );
 	
 	
 	/*
