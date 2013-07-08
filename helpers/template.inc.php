@@ -105,63 +105,69 @@
 		}
 
 
+		public static function compileLessFilesChecked()
+		{
+			$cssfile = null;
 
-		public static function compileLessFiles()
+			if( VERSION_HAS_CHANGED
+				|| !file_exists( $cssfile = PUBLIC_DIR . RESULTING_CSS )
+				|| ( DEVELOPMENT_ENVIRONMENT && DEV_ALWAYS_RECOMPILE_LESS ) )
+				self::compileLessFiles( $cssfile );
+		}
+
+		public static function compileLessFiles($cssfile = null)
 		{
 			if( RESULTING_CSS !== '' && LESS_FILES !== '' )
 			{
-				$cssfile = PUBLIC_DIR . RESULTING_CSS;
+				if( is_null( $cssfile ) )
+					$cssfile = PUBLIC_DIR . RESULTING_CSS ;
 
-				if( VERSION_HAS_CHANGED || !file_exists( $cssfile )
-					|| ( DEVELOPMENT_ENVIRONMENT && DEV_ALWAYS_RECOMPILE_LESS ) )
+				$fp = fopen( $cssfile, 'c');
+				
+				if ( !flock($fp, LOCK_EX) )
 				{
-					$fp = fopen( $cssfile, 'c');
-					
-					if ( !flock($fp, LOCK_EX) )
-					{
-						@fclose( $fp );
-						throw new Exception("Cannot aquire lock to '${cssfile}'. The file may already being edited.");
-					}
-
-					try {
-					
-						if( !ftruncate($fp, 0) )
-							throw new Exception("Error while truncating '${cssfile}'.");	
-
-						$less = new lessc;
-						$less->setFormatter("compressed");
-
-						$less->setVariables(array(
-						  					'@DEVELOPMENT' => DEVELOPMENT_ENVIRONMENT,
-						  					'@BASE_URI' => BASE_URI ) );
-
-						foreach(explode( ',', LESS_FILES ) AS $f)
-						{
-							$lessFile = LESS_DIR . trim($f) ;
-
-							if( !is_file($lessFile) )
-								throw new Exception("File not found, or not file: '${lessFile}'");
-
-							$cont = $less->compileFile( $lessFile );
-
-							fwrite($fp, $cont);
-							fwrite($fp, "\n");
-						}
-
-						@fflush($fp);
-						flock($fp, LOCK_UN);
-						@fclose($fp);
-
-					} catch(Exception $e) {
-
-						@flock($fp, LOCK_UN);
-						@fclose($fp);
-						@unlink($cssfile);
-
-						throw $e;
-					}
-
+					@fclose( $fp );
+					throw new Exception("Cannot aquire lock to '${cssfile}'. The file may already being edited.");
 				}
+
+				try {
+				
+					if( !ftruncate($fp, 0) )
+						throw new Exception("Error while truncating '${cssfile}'.");	
+
+					$less = new lessc;
+					//$less->setFormatter("compressed");
+
+					$less->setVariables(array(
+					  					'@DEVELOPMENT' => DEVELOPMENT_ENVIRONMENT,
+					  					'@BASE_URI' => BASE_URI ) );
+
+					foreach(explode( ',', LESS_FILES ) AS $f)
+					{
+						$lessFile = LESS_DIR . trim($f) ;
+
+						if( !is_file($lessFile) )
+							throw new Exception("File not found, or not file: '${lessFile}'");
+
+						$cont = $less->compileFile( $lessFile );
+
+						fwrite($fp, $cont);
+						fwrite($fp, "\n");
+					}
+
+					@fflush($fp);
+					flock($fp, LOCK_UN);
+					@fclose($fp);
+
+				} catch(Exception $e) {
+
+					@flock($fp, LOCK_UN);
+					@fclose($fp);
+					@unlink($cssfile);
+
+					throw $e;
+				}
+				
 			}
 
 		}

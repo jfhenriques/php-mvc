@@ -186,13 +186,19 @@
 											  'a' => $action 		);
 			}
 
-			function build_tmp_path($named_resource, $name, $isVar = false)
+
+
+			function build_named_route_path($named_resource, $name, $isVar = false)
 			{
 				$name = $isVar ? "%{$name}": $name ;
 				return ( $named_resource === '' ? $name : "{$named_resource}/{$name}" ) ;
 			}
+			function build_named_route_key($name, $named_key)
+			{
+				return ( empty( $named_key ) ? "$name" : "{$named_key}_{$name}"  ) ;
+			}
 
-			function build_tmp_named_route($name, &$named_var_count, &$named_key, &$named_resource, $is_match = false)
+			function build_named_route($name, &$named_var_count, &$named_key, &$named_resource)
 			{
 				if( !empty($name) )
 				{
@@ -201,18 +207,12 @@
 						$named_var_count++;
 						
 						//$named_resource .= "/%{$named_var_count}";
-						$named_resource = build_tmp_path($named_resource, $named_var_count, true);
+						$named_resource = build_named_route_path($named_resource, $named_var_count, true);
 					}
 					else
 					{
-						$named_key = ( empty( $named_key ) ?
-												"$name" :
-												( $is_match ?
-													$named_key :
-													"{$named_key}_{$name}" ) );
-
-						//$named_resource .= "/{$name}";
-						$named_resource = build_tmp_path($named_resource, $name);
+						$named_key = build_named_route_key($name, $named_key);
+						$named_resource = build_named_route_path($named_resource, $name);
 					}
 				}
 			}
@@ -238,7 +238,7 @@
 					$named_var_count++;
 					$named_resource = $named_resource ;
 					//$named_resource_plus = "{$named_resource}/%{$named_var_count}" ;
-					$named_resource_plus = build_tmp_path($named_resource, $named_var_count, true);
+					$named_resource_plus = build_named_route_path($named_resource, $named_var_count, true);
 					
 					if( checkInArray('index', $only) )
 					{
@@ -258,7 +258,7 @@
 					if( checkInArray('new', $only) )
 					{
 						insertMethod($controller, 'new', 'get', 'mnew', $output[$name]);
-						$named_array["{$named_key}_new"] = build_tmp_path($named_resource_plus, 'new'); //"{$named_resource_plus}/new";
+						$named_array["{$named_key}_new"] = build_named_route_path($named_resource_plus, 'new'); //"{$named_resource_plus}/new";
 					}
 
 					if( checkInArray('show', $only) )
@@ -287,7 +287,7 @@
 						Router::add_key_to_array( $id, $output[$name] );
 							
 						insertMethod($controller, 'edit', 'get', 'edit', $output[$name][$id]);
-						$named_array["{$named_key}_edit"] = build_tmp_path($named_resource_plus, 'edit'); //"{$named_resource_plus}/edit";
+						$named_array["{$named_key}_edit"] = build_named_route_path($named_resource_plus, 'edit'); //"{$named_resource_plus}/edit";
 					}
 				}
 				else
@@ -298,13 +298,12 @@
 					
 						insertMethod($controller, $name, $via, $arr['action'], $output);
 
-						$named_key = ( isset( $arr['as'] ) && $arr['as'] !== '' ) ? $arr['as'] : $named_key ;
+						$named_key = ( isset( $arr['as'] ) && $arr['as'] !== '' ) ?
+											$arr['as'] :
+											build_named_route_key($arr['action'], $named_key) ;
 
 						if( !is_null( $named_key ) && $named_key !== false )
-						{
-							build_tmp_named_route($name, $named_var_count, $named_key, $named_resource, true );
-							$named_array[$named_key] = $named_resource;
-						}
+							$named_array[$named_key] = $named_resource; // build_named_route_path($named_resource, $name);
 					}
 				}
 				
@@ -323,8 +322,8 @@
 					{
 						$name = verifyName( substr($key, 1) );
 
-						$tmp_named_key = ( empty( $named_key ) ? "$name" : "{$named_key}_{$name}" ) ;
-						$tmp_named_resource = build_tmp_path( $named_resource, $name );
+						$tmp_named_key = build_named_route_key($name, $named_key);
+						$tmp_named_resource = build_named_route_path( $named_resource, $name );
 						//$tmp_named_resource = "{$named_resource}/{$name}";
 						
 						processAtom( $val, true, $name, $name, $output, $named_array, $named_var_count, $tmp_named_key, $tmp_named_resource );
@@ -336,7 +335,7 @@
 							Router::add_key_to_array( $key, $output[$name] );
 
 							//$tmp_named_resource .= "/%{$named_var_count_plus}";
-							$tmp_named_resource = build_tmp_path($tmp_named_resource, $named_var_count_plus, true );
+							$tmp_named_resource = build_named_route_path($tmp_named_resource, $named_var_count_plus, true );
 							
 								
 							processResources( $val, $output[$name][$key], $named_array, $named_var_count_plus, $tmp_named_key, $tmp_named_resource );
@@ -364,9 +363,9 @@
 
 						Router::add_key_to_array( $space['name'], $output );
 
-						$tmp_named_key = ( empty( $named_key ) ? "{$space['name']}" : "{$named_key}_{$space['name']}" );
+						$tmp_named_key = build_named_route_key($space['name'], $named_key);
 						//$tmp_named_resource = "{$named_resource}/{$space['name']}";
-						$tmp_named_resource = build_tmp_path( $named_resource, $space['name'] );
+						$tmp_named_resource = build_named_route_path( $named_resource, $space['name'] );
 						
 						processNamespace( $space, $output[ $space['name'] ], $named_array, $tmp_named_key, $tmp_named_resource );
 					}
@@ -408,19 +407,20 @@
 
 							Router::add_key_to_array( $val, $lastLevel );
 
-							if( Router::hasNext( $i, $exp ) !== false )
-								build_tmp_named_route($val, $tmp_named_var_count, $tmp_named_key, $tmp_named_resource );
+							build_named_route($val, $tmp_named_var_count, $tmp_named_key, $tmp_named_resource );
 
-							else
+							if( Router::hasNext( $i, $exp ) === false )
+							{
+								//echo "$val - $tmp_named_key <br>\n";
 								processAtom( $rule, false, $controller, $val, $lastLevel, $named_array, $tmp_named_var_count, $tmp_named_key, $tmp_named_resource );
-								
+							}
 
 							$lastLevel = &$lastLevel[$val] ;
 						}
 
 						if( !is_null( $val ) )
 						{
-							build_tmp_named_route($val, $tmp_named_var_count, $tmp_named_key, $tmp_named_resource );
+							//build_named_route($val, $tmp_named_var_count, $tmp_named_key, $tmp_named_resource );
 							processMatches( $rule, $lastLevel, $named_array, $tmp_named_var_count, $tmp_named_key, $tmp_named_resource );
 						}
 					}
