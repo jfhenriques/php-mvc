@@ -6,11 +6,21 @@
 	class Template {
 		
 		private $data = array();
+		private $router = null;
 		
 		private $include_headers = true;
 		
 		private $jsonArray = array();
 		private $jsonCode = R_GLOB_ERR_UNDEFINED;
+
+
+		private function __clone() { }
+		public function __construct($router)
+		{
+			$this->router = $router;
+		}
+
+
 		
 		public function includeHeaders( $inc )
 		{
@@ -19,14 +29,15 @@
 		}
 		
 		
-		public function renderDirect( $view_file, $router = null )
+		public function renderDirect( $view_file )
 		{
-			$router = is_null( $router ) ? Router::getInstance() : $router ;
+			$router = $this->router ;
 			
 			if( !is_file( $view_file ) )
 				throw new Exception( "View file '{$view_file}' does not exist" );
 				
 			$data = $this->data ;
+			//extract($this->data, EXTR_SKIP);
 
 			header('Content-type: text/html; charset=utf-8', true);
 
@@ -38,13 +49,13 @@
 			
 			if( $this->include_headers )
 				include_once( PAGE_FOOTER );
+
+			exit;
 		}
 
 		public function render( $view )
 		{
-			$router = Router::getInstance();
-
-			return $this->renderDirect( VIEWS_DIR . "{$router->getControllerName()}" . DS . "{$view}.html.php", $router ) ;
+			return $this->renderDirect( VIEWS_DIR . "{$this->router->getControllerName()}" . DS . "{$view}.html.php" ) ;
 		}
 
 		public function renderHTML( $html )
@@ -52,12 +63,16 @@
 			header('Content-type: text/html; charset=utf-8', true);
 
 			echo $html;
+
+			exit;
 		}
 		public function renderText( $text )
 		{
 			header('Content-type: text/plain; charset=utf-8', true);
 
 			echo $text;
+
+			exit;
 		}
 
 
@@ -102,6 +117,15 @@
 		public function set( $key, $value )
 		{
 			$this->data[$key] = $value ;
+		}
+
+		private function init_form($name, $named_route, $method = "POST", $class = "")
+		{
+			echo "<form name=\"{$name}\" action=\"{$this->router->getPath('{$named_route}')}\" method=\"{$method}\" class=\"{$class}\">\n";
+		}
+		private function end_form()
+		{
+			echo "</form>\n";
 		}
 
 

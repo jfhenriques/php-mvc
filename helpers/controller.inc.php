@@ -75,8 +75,8 @@
 		
 		public function __construct()
 		{
-			$this->respond = new Template();
-			$this->router = Router::getInstance();
+			$this->router = $router = Router::getInstance();
+			$this->respond = new Template( $router );
 
 			$this->__configure();
 		}
