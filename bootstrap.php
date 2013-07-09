@@ -1,6 +1,6 @@
 <?php
 	
-	DEFINE('API_VERSION', 20130708);
+	DEFINE('API_VERSION', 20130709);
 
 
 
@@ -14,7 +14,6 @@
 	/*
 	 * Some usefull defines
 	 */
-		
 
 		DEFINE('ROOT', __DIR__ );
 
@@ -50,9 +49,11 @@
 		if( USE_PHPLESS )
 		{
 			require_once( USE_PHPLESS !== true ? USE_PHPLESS : ( HELPERS_DIR . 'lessc.inc.php' ) );
+
 			Template::compileLessFilesChecked();
 		}
 
+		//TODO: Add plugin that only when needed
 		Plugin::loadPlugins();
 
 		$router = Router::getInstance();

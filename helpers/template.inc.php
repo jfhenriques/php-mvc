@@ -195,14 +195,14 @@
 			}
 		}
 
-		private function init_form($name, $named_route, $method = "POST", $class = "")
+		private function init_form($name, $named_route, $named_route_arr = array(), $method = "POST", $class = "")
 		{
 			$rand = Controller::genRand64();
 
 			$_SESSION['forms'][$name] = $rand ;
 
-			return    "<form name=\"{$name}\" action=\"{$this->router->getPath('{$named_route}')}\" method=\"{$method}\" class=\"{$class}\">\n"
-					. "<input type=\"hidden\" name=\"ctrlcode\" value=\"{$rand}\" />\n";
+			return    "<form name=\"{$name}\" action=\"{$this->router->getPath($named_route, $named_route_arr)}\" method=\"{$method}\" "
+					. "class=\"{$class}\">\n<input type=\"hidden\" name=\"ctrlcode\" value=\"{$rand}\" />\n";
 
 		}
 		private function end_form()

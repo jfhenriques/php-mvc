@@ -4,7 +4,7 @@
 	DEFINE('MULTIPART_FILE',	HELPERS_DIR . 'multipart.parser.php' );
 	DEFINE('NOT_FOUND_PAGE',	PUBLIC_DIR . '404.html' );
 	
-	DEFINE('RESPOND_DISABLED',	0x0 );
+	DEFINE('RESPOND_NONE',		0x0 );
 	DEFINE('RESPOND_HTML',		0x1 );
 	DEFINE('RESPOND_JSON',		0x2 );
 	DEFINE('RESPOND_OTHER',		0x3 );
@@ -22,7 +22,7 @@
 		private $controllerAction = null;
 		private $controllerFound = false;
 		
-		private $responseType = RESPOND_DISABLED;
+		private $responseType = RESPOND_NONE;
 
 		const ROUTES_KEY = 'routes';
 		const NAMED_ROUTES_KEY = 'named_routes';
@@ -151,7 +151,7 @@
 			return $route;
 		}*/
 
-		public function getPath($named_route, $arrIn = array())
+		public function getPath($named_route, $arrIn = array(), $format = 'html')
 		{
 			$route = null;
 
@@ -159,9 +159,12 @@
 				!isset( $this->cachedNamedRoutes[$named_route] ) )
 				return false;
 
-			$route = "/" . BASE_URI . $this->cachedNamedRoutes[$named_route];
+			if( !is_null( $format ) )
+				$format = ".{$format}";
 
-			$t_elems = count( $arrIn ) ;
+			$route = "/" . BASE_URI . "{$this->cachedNamedRoutes[$named_route]}{$format}";
+
+			$t_elems = ( is_array( $arrIn ) ? count( $arrIn ) : 0 );
 
 			switch( $t_elems )
 			{
@@ -169,7 +172,7 @@
 					return $route;
 
 				case 1:
-					return str_replace( "%1", $arrIn[0], $route );
+					return str_replace( "%1", $arrIn[0], $route ) ;
 
 				case 2:
 					return str_replace( array('%1', '%2'), $arrIn, $route );
@@ -534,17 +537,17 @@
 		{
 			return @(isset( $where['root'] )
 						&& is_string( $where['root'] )
-						&& ( strlen( $where['root'] ) > 0 )) ;
+						&& $where['root'] ) ;
 		}
 		
 		public function route()
 		{
 		
-			if( $this->is_default_root_valid( $this->cachedRoutes ) && $this->is_root( $this->url ) )
+			if( $this->is_root( $this->url ) && $this->is_default_root_valid( $this->cachedRoutes ) )
 			{
 				header('Location: ' . $this->cachedRoutes['root'], true);
 			
-				return;
+				exit;
 			}
 			
 			
@@ -569,22 +572,29 @@
 				{
 					$formatExp = explode( '.', $val , 2 );
 					$val = $formatExp[0];
-					
-					$_REQUEST['z_format'] = strtolower( ( count( $formatExp ) > 1 ) ? $formatExp[1] : "html" ) ;
-					
-					switch( $_REQUEST['z_format'] )
+
+					if( count( $formatExp ) !== 2 )
+						$_REQUEST['z_format'] = false;
+
+					else
 					{
-						case 'html':
-							$this->responseType = RESPOND_HTML;
-							break;
-							
-						case 'json':
-							$this->responseType = RESPOND_JSON;
-							break;
-							
-						default:
-							$this->responseType = RESPOND_OTHER;
-							break;
+					
+						$_REQUEST['z_format'] = strtolower( $formatExp[1] ) ;
+					
+						switch( $_REQUEST['z_format'] )
+						{
+							case 'html':
+								$this->responseType = RESPOND_HTML;
+								break;
+								
+							case 'json':
+								$this->responseType = RESPOND_JSON;
+								break;
+								
+							default:
+								$this->responseType = RESPOND_OTHER;
+								break;
+						}
 					}
 				}
 				
@@ -652,14 +662,10 @@
 				$this->loadController( $this->controller, $this->controllerAction );
 				
 			else
-			{
-				header("HTTP/1.0 404 Not Found");
-				header('Content-type: text/html; charset=utf-8', true);
-				
-				include_once( NOT_FOUND_PAGE );
-			}
-			
-			return $this->controllerFound ;
+				$this->generate404();
+
+			exit;
+			//return $this->controllerFound ;
 		}
 		
 		private function loadController( $controller, $action )
@@ -674,6 +680,17 @@
 			else
 				$instance->$action();
 		
+		}
+
+
+		public function generate404()
+		{
+			header("HTTP/1.0 404 Not Found");
+			header('Content-type: text/html; charset=utf-8', true);
+			
+			include_once( NOT_FOUND_PAGE );
+
+			exit;
 		}
 		
 		public function getControllerName()
