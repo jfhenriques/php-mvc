@@ -117,7 +117,7 @@
 		}
 
 
-		public function getPath($named_route)
+		/*public function getPath($named_route)
 		{
 			$route = null;
 
@@ -149,6 +149,50 @@
 			}
 			
 			return $route;
+		}*/
+
+		public function getPath($named_route, $arrIn = array())
+		{
+			$route = null;
+
+			if( is_null( $this->cachedNamedRoutes ) ||
+				!isset( $this->cachedNamedRoutes[$named_route] ) )
+				return false;
+
+			$route = "/" . BASE_URI . $this->cachedNamedRoutes[$named_route];
+
+			$t_elems = count( $arrIn ) ;
+
+			switch( $t_elems )
+			{
+				case 0:
+					return $route;
+
+				case 1:
+					return str_replace( "%1", $arrIn[0], $route );
+
+				case 2:
+					return str_replace( array('%1', '%2'), $arrIn, $route );
+
+				case 3:
+					return str_replace( array('%1', '%2', '%3'), $arrIn, $route );
+
+				/*case 4:
+					return str_replace( array('%1', '%2', '%3', '%4'), $arrIn, $route );
+
+				case 5:
+					return str_replace( array('%1', '%2', '%3', '%4', '%5'), $arrIn, $route );*/
+
+				default:
+
+			}
+
+			$needle = array();
+
+			for($i = 1; $i <= $t_elems; $i++)
+				$needle[] = "%{$i}" ;
+
+			return str_replace( $needle, $arrIn, $route );
 		}
 
 		

@@ -3,9 +3,16 @@
 	DEFINE('PAGE_HEADER', VIEWS_DIR . 'header.html.php');
 	DEFINE('PAGE_FOOTER', VIEWS_DIR . 'footer.html.php');
 
+
+	DEFINE('NOTICE_SUCCESS'	, 'success');
+	DEFINE('NOTICE_INFO'	, 'info');
+	DEFINE('NOTICE_WARNINGS', 'warnings');
+	DEFINE('NOTICE_ERRORS'	, 'errors');
+
 	class Template {
 		
 		private $data = array();
+		//private $forms = array();
 		private $router = null;
 		
 		private $include_headers = true;
@@ -18,18 +25,41 @@
 		public function __construct($router)
 		{
 			$this->router = $router;
+
+			self::__init_array($_SESSION, NOTICE_SUCCESS);
+			self::__init_array($_SESSION, NOTICE_INFO);
+			self::__init_array($_SESSION, NOTICE_WARNINGS);
+			self::__init_array($_SESSION, NOTICE_ERRORS);
+
+			self::__init_array($_SESSION, 'forms');
 		}
 
 
-		
+		public static function __init_array($arr, $key)
+		{
+			if( !is_array( $arr ) )
+				$arr = array( $key => array() );
+
+			else
+			if( !isset( $arr[$key] ) || !is_array( $arr[$key] ) )
+				$arr[$key] = array();
+		}
 		public function includeHeaders( $inc )
 		{
 			if( is_bool( $inc ) )
 				$this->include_headers = $inc;
 		}
+
+		private function set_status_code($code)
+		{
+			if( $code !== 200 && defined('PHP_VERSION_ID') && PHP_VERSION_ID > 50400 )
+				return http_response_code( $code );
+
+			return false;
+		}
 		
 		
-		public function renderDirect( $view_file )
+		public function renderDirect( $view_file, $st_code = 200 )
 		{
 			$router = $this->router ;
 			
@@ -40,6 +70,7 @@
 			//extract($this->data, EXTR_SKIP);
 
 			header('Content-type: text/html; charset=utf-8', true);
+			$this->set_status_code($st_code);
 
 			
 			if( $this->include_headers )
@@ -53,22 +84,26 @@
 			exit;
 		}
 
-		public function render( $view )
+		public function render( $view, $st_code = 200 )
 		{
-			return $this->renderDirect( VIEWS_DIR . "{$this->router->getControllerName()}" . DS . "{$view}.html.php" ) ;
+			return $this->renderDirect( VIEWS_DIR . "{$this->router->getControllerName()}" . DS . "{$view}.html.php", $st_code ) ;
 		}
 
-		public function renderHTML( $html )
+		public function renderHTML( $html, $st_code = 200 )
 		{
 			header('Content-type: text/html; charset=utf-8', true);
+
+			$this->set_status_code($st_code);
 
 			echo $html;
 
 			exit;
 		}
-		public function renderText( $text )
+		public function renderText( $text, $st_code = 200 )
 		{
 			header('Content-type: text/plain; charset=utf-8', true);
+
+			$this->set_status_code($st_code);
 
 			echo $text;
 
@@ -86,7 +121,7 @@
 				$this->jsonArray = $arr;
 		}
 		
-		public function renderJSON( $msgArr = array() )
+		public function renderJSON( $msgArr = array(), $st_code = 200 )
 		{
 			$jsonEnc = null;
 
@@ -100,10 +135,14 @@
 			else
 			{
 				header('Content-Type: application/json', true);
+
+				$this->set_status_code($st_code);
 				
 				echo $jsonEnc;
 			}
 		}
+
+
 	
 	
 		public function get( $key, $default = null )
@@ -119,13 +158,71 @@
 			$this->data[$key] = $value ;
 		}
 
+		private function __printNotices($arrIn, $class = "")
+		{
+
+			if( !is_array( $arrIn ) )
+				return false;
+
+			$ret = "";
+
+			foreach( $arrIn as $not )
+				$ret .= "<div class=\"{$class}\">{$not}</div>\n";
+
+			return $ret;
+
+		}
+
+		private function printErrors($class = 'alert-error')
+		{
+			if( isset( $_SESSION[NOTICE_ERRORS] ) )
+			{
+				$ret = $this->__printNotices( $_SESSION[NOTICE_ERRORS], $class);
+				unset( $_SESSION[NOTICE_ERRORS] );
+
+				return $ret;
+			}
+		}
+
+		private function printSuccess($class = 'alert-success')
+		{
+			if( isset( $_SESSION[NOTICE_SUCCESS] ) )
+			{
+				$ret = $this->__printNotices( $_SESSION[NOTICE_SUCCESS], $class);
+				unset( $_SESSION[NOTICE_SUCCESS] );
+
+				return $ret;
+			}
+		}
+
 		private function init_form($name, $named_route, $method = "POST", $class = "")
 		{
-			echo "<form name=\"{$name}\" action=\"{$this->router->getPath('{$named_route}')}\" method=\"{$method}\" class=\"{$class}\">\n";
+			$rand = Controller::genRand64();
+
+			$_SESSION['forms'][$name] = $rand ;
+
+			return    "<form name=\"{$name}\" action=\"{$this->router->getPath('{$named_route}')}\" method=\"{$method}\" class=\"{$class}\">\n"
+					. "<input type=\"hidden\" name=\"ctrlcode\" value=\"{$rand}\" />\n";
+
 		}
 		private function end_form()
 		{
-			echo "</form>\n";
+			return "</form>\n";
+		}
+
+
+
+		public static function verifyForm($name, $ctrlcode, $unset = true)
+		{
+			if( isset( $_SESSION['forms'][$name] ) && $_SESSION['forms'][$name] === $ctrlcode )
+			{
+				if( $unset )
+					unset( $_SESSION['forms'][$name] );
+
+				return true;
+			}
+
+			return false;
 		}
 
 
