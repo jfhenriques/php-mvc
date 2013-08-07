@@ -1,6 +1,6 @@
 <?php
 	
-	DEFINE('API_VERSION', 20130709);
+	DEFINE('API_VERSION', 20130807);
 
 
 
@@ -43,7 +43,7 @@
 
 
 	/*
-	 * Start the real thing
+	 * Where all the real action happens
 	 */
 
 		if( USE_PHPLESS )
@@ -53,7 +53,7 @@
 			Template::compileLessFilesChecked();
 		}
 
-		//TODO: Add plugin that only when needed
+		//TODO: Add plugin that loads only when needed
 		Plugin::loadPlugins();
 
 		$router = Router::getInstance();

@@ -201,7 +201,7 @@
 
 			$_SESSION['forms'][$name] = $rand ;
 
-			return    "<form name=\"{$name}\" action=\"{$this->router->getPath($named_route, $named_route_arr)}\" method=\"{$method}\" "
+			return    "<form name=\"{$name}\" id=\"{$name}\" action=\"{$this->router->getPath($named_route, $named_route_arr)}\" method=\"{$method}\" "
 					. "class=\"{$class}\">\n<input type=\"hidden\" name=\"ctrlcode\" value=\"{$rand}\" />\n";
 
 		}

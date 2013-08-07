@@ -66,6 +66,7 @@
 	
 		public $respond = null;
 		private $requireAuth = false;
+		private $forceMode = RESPOND_NONE;
 		protected $router = null;
 		
 		private static $authFunction = null;
@@ -79,9 +80,19 @@
 			$this->respond = new Template( $router );
 
 			$this->__configure();
+
+			if(    $this->forceMode !== RESPOND_NONE
+				&& $router->responseType() !== $this->forceMode )
+				$router->generate404();
 		}
 		
 		protected function __configure() {}
+
+		protected function __enforceMode( $mode = RESPOND_NONE )
+		{
+			if( !is_null( $mode ) )
+				$this->forceMode = $mode;
+		}
 	
 
 		public function __checkAuth( $auth = true, $exit = false )
