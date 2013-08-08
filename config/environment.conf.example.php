@@ -107,12 +107,12 @@
 	 *	environment the application will not be aware that a flush is needed. You may want to
 	 *	had a comment with some kind of version number on the routes file, and increase it when needed
 	 *	before commiting to the repo.
-	 *	The ROUTES file was choosen for mtime check, because it is will, almost without any doubt,
-	 *	be changed if a new controller is added, making you to reconfigure your routes.
+	 *	The ROUTES file was choosen for mtime check, as you will need to update the routes file when adding
+	 *	a new controller.
 	 *
 	 *	This does not flush the whole cache as in 'COMMON_CACHE_FORCE_FLUSH', only deletes internally used
-	 *	variables, making them to be rebuilt.
-	 *	If your using cached queries or any other kind of variable set with CommonCache, it will NOT be deleted.
+	 *	variables.
+	 *	If you're using cached queries or any other kind of variable set with CommonCache they will remain untouched.
 	 */
 	DEFINE( 'FLUSH_CACHE_ON_ROUTES_CHANGE', true );
 
@@ -130,18 +130,20 @@
 
 
 	/*
-	 *	Use the builtin less mechanism (provided by phpless) to compile each less file and concat in one css.
+	 *	Use the builtin less mechanism (provided by phpless) to compile each less file and concat in a single css file.
 	 *
-	 *	The resulting file will only be compiled if the mtime of ROUTES file has changed (needs 'MTIME_ROUTES_FILE')
-	 *	or the resulting css file is deleted.
+	 *	The resulting file will only be compiled if the mtime of the ROUTES file has changed (needs 'MTIME_ROUTES_FILE')
+	 *	or the resulting css file is deleted. The ROUTES file was choosen, excluding the need to add yet another mtime check
+	 *	to the overall performance, as probably it will be changed when you send your updates do the production environment.
 	 *
 	 *	As the framework is designed to be the most efficient possible, the use of less in a production
 	 *	environment is highly discouraged. For instance, for each less file, aditional computation needs
-	 *	to be made. A way arround is to pre-compile each less file in its corresponding css.
-	 *	For added performance boost, its a good practice to compile in a single file every css used
-	 *	by the whole website.
-	 *	You can provide every less file, separated by comma here.
-	 *	The less files will be searched on the root directory 'less'.
+	 *	to be made on the client browser. A way arround is pre-compililing each less file in its corresponding css.
+	 *	For added performance boost, its a good practi to concat them all in a single css file.
+	 *
+	 *	The less files will be searched on 'less' directory, located at the root of your project.
+	 *
+	 *	You can provide each less file, separated by comma.
 	 */
 	DEFINE( 'LESS_FILES', '' );
 
