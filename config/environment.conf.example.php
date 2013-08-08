@@ -96,9 +96,9 @@
 
 
 	/*
-	 *	If set to true, all you cache will be flushed when the ROUTES file change.
+	 *	If set to true, all your cache will be flushed when the ROUTES file change.
 	 *	Usefull for making your application be aware of new controllers/plugins
-	 *	that have been added to your application, when you don't want to manually flush.
+	 *	that have been added to your application and you don't want to flush manually.
 	 *
 	 *	Requires the flag 'MTIME_ROUTES_FILE' set to true
 	 *	
