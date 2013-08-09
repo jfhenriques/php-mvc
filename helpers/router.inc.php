@@ -159,8 +159,7 @@
 				!isset( $this->cachedNamedRoutes[$named_route] ) )
 				return false;
 
-			if( !is_null( $format ) )
-				$format = ".{$format}";
+			$format = is_null( $format ) ? '' : ".{$format}";
 
 			$route = "/" . BASE_URI . "{$this->cachedNamedRoutes[$named_route]}{$format}";
 
@@ -180,10 +179,10 @@
 				case 3:
 					return str_replace( array('%1', '%2', '%3'), $arrIn, $route );
 
-				/*case 4:
+				case 4:
 					return str_replace( array('%1', '%2', '%3', '%4'), $arrIn, $route );
 
-				case 5:
+				/*case 5:
 					return str_replace( array('%1', '%2', '%3', '%4', '%5'), $arrIn, $route );*/
 
 				default:

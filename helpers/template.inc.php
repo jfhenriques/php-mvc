@@ -110,6 +110,18 @@
 			exit;
 		}
 
+		public function gotoLocation( $named_route, $array = array(), $default = 'html' )
+		{
+			$this->gotoLocationDirect( $this->router->getPath( $named_route, $array, $default ) );
+		}
+
+		public function gotoLocationDirect( $location )
+		{
+			header('Location: ' . $location );
+
+			exit;
+		}
+
 
 		public function setJSONCode($code)
 		{
