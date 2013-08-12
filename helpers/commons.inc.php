@@ -62,37 +62,65 @@
 		
 		
 		/**********************************************************************************
-		 *	Events
+		 *	EventStack
 		 **********************************************************************************/
 
-		/*interface MVCEvent {
-			public function exec();
-		}
+		class EventStack {
 
+			protected $eventList = array();
 
-		class EventLoader {
-
-			private $eventList = array();
-
-			public function registerFirst(MVCEcent $e)
+			public function registerFirst(callable $e)
 			{
 				array_unshift($this->eventList, $e);
 			}
 
-			public function register(MVCEvent $e)
+			public function register(callable $e)
 			{
 				$this->eventList[] = $e;
 			}
 
-			public function execAll()
+
+			public static function checkInitialize(&$stack)
 			{
-				foreach($this->eventList as $e)
-				{
-					if( $e->exec() === false )
-						break;
-				}
+				if( is_null( $stack ) )
+					$stack = new EventStack();
 			}
-		}*/
+
+			public static function execAll(&$stack)
+			{
+				if( !is_null( $stack ) && $stack instanceof EventStack )
+				{
+					$ret = true;
+
+					$params = func_get_args();
+
+					foreach($stack->eventList as $e)
+					{
+						if( $e( $params ) === false )
+						{
+							$ret = false;
+							break;
+						}
+					}
+
+					$stack = null;
+					return $ret;
+
+				}
+
+				return null;
+			}
+
+			public static function sRegister(&$stack, $e)
+			{
+				if(    is_null( $stack )
+					|| !( $stack instanceof EventStack ) )
+					$stack = new EventStack();
+
+				$stack->register( $e );
+			}
+
+		}
 
 
 

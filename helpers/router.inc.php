@@ -13,8 +13,7 @@
 	class Router {
 		
 		private static $instance = null;
-
-		private static $eventOnConstruct = array();
+		private static $eventOnConstruct = null;
 		
 		private $url = null;
 		private $cachedRoutes = null;
@@ -69,12 +68,9 @@
 			$this->cachedNamedRoutes = $namedRoutes ;
 
 
-			// Process events
+			// Process onConstruct Events
 
-			foreach(self::$eventOnConstruct as $e)
-				$e();
-
- 			self::$eventOnConstruct = null;
+			EventStack::execAll( self::$eventOnConstruct );
 		}
 		
 		public static function getInstance()
@@ -87,7 +83,10 @@
 
 		public static function registerOnConstruct(callable $e)
 		{
-			self::$eventOnConstruct[] = $e;
+			if( is_null( self::$eventOnConstruct ) )
+				self::$eventOnConstruct = new EventStack();
+
+			self::$eventOnConstruct->register( $e);
 		}
 		
 		private static function getNext(&$i, $arr)
