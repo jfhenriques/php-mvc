@@ -46,15 +46,24 @@
 	 * Where all the real action happens
 	 */
 
-		if( USE_PHPLESS )
+	class Bootstrap
+	{
+
+		public static function start()
 		{
-			require_once( USE_PHPLESS !== true ? USE_PHPLESS : ( HELPERS_DIR . 'lessc.inc.php' ) );
+			
+			if( USE_PHPLESS )
+			{
+				require_once( USE_PHPLESS !== true ? USE_PHPLESS : ( HELPERS_DIR . 'lessc.inc.php' ) );
 
-			Template::compileLessFilesChecked();
+				Template::compileLessFilesChecked();
+			}
+
+			//TODO: Add plugin that loads only when needed
+			Plugin::loadPlugins();
+
+			Router::getInstance()->dispatch();
+
+			exit;
 		}
-
-		//TODO: Add plugin that loads only when needed
-		Plugin::loadPlugins();
-
-		$router = Router::getInstance();
-		$router->route();
+	}

@@ -40,6 +40,7 @@
 		});
 
 		register_shutdown_function(function() {
+
 			$lErr = error_get_last();
 
 			if( DEVELOPMENT_ENVIRONMENT === true && isset($GLOBALS['init_time']) )
@@ -61,8 +62,46 @@
 		
 		
 		/**********************************************************************************
+		 *	Events
+		 **********************************************************************************/
+
+		/*interface MVCEvent {
+			public function exec();
+		}
+
+
+		class EventLoader {
+
+			private $eventList = array();
+
+			public function registerFirst(MVCEcent $e)
+			{
+				array_unshift($this->eventList, $e);
+			}
+
+			public function register(MVCEvent $e)
+			{
+				$this->eventList[] = $e;
+			}
+
+			public function execAll()
+			{
+				foreach($this->eventList as $e)
+				{
+					if( $e->exec() === false )
+						break;
+				}
+			}
+		}*/
+
+
+
+		/**********************************************************************************
 		 *	Common memcached
-		 **********************************************************************************/	
+		 **********************************************************************************/
+
+
+
 		
 		class CommonCache {
 			

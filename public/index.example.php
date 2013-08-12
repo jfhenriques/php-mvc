@@ -1,6 +1,7 @@
 <?php
 
 	// If sessions are going to be used, uncoment the next line
+	//session_name('_changeme_session');
 	//session_start();
 
 	/*
@@ -13,3 +14,6 @@
 	 */
 	
 	require('../bootstrap.php');
+
+
+	Bootstrap::start();

@@ -13,6 +13,8 @@
 	class Router {
 		
 		private static $instance = null;
+
+		private static $eventOnConstruct = array();
 		
 		private $url = null;
 		private $cachedRoutes = null;
@@ -21,6 +23,8 @@
 		private $controller = null;
 		private $controllerAction = null;
 		private $controllerFound = false;
+
+
 		
 		private $responseType = RESPOND_NONE;
 
@@ -63,15 +67,27 @@
 
 			$this->cachedRoutes = $cache ;
 			$this->cachedNamedRoutes = $namedRoutes ;
- 
+
+
+			// Process events
+
+			foreach(self::$eventOnConstruct as $e)
+				$e();
+
+ 			self::$eventOnConstruct = null;
 		}
 		
 		public static function getInstance()
 		{
-			if( is_null( static::$instance ) )
-				static::$instance = new Router();
+			if( is_null( self::$instance ) )
+				self::$instance = new Router();
 				
-			return static::$instance;
+			return self::$instance;
+		}
+
+		public static function registerOnConstruct(callable $e)
+		{
+			self::$eventOnConstruct[] = $e;
 		}
 		
 		private static function getNext(&$i, $arr)
@@ -539,7 +555,7 @@
 						&& $where['root'] ) ;
 		}
 		
-		public function route()
+		public function dispatch()
 		{
 		
 			if( $this->is_root( $this->url ) && $this->is_default_root_valid( $this->cachedRoutes ) )
