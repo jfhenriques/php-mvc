@@ -23,3 +23,5 @@
 
 
 	DEFINE( 'CACHE_VERSION_VAR', 'r.version' );
+
+	DEFINE('IS_HTTPS', isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] );

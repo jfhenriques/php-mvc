@@ -59,8 +59,89 @@
 		ini_set('log_errors', 1);
 		ini_set('ignore_repeated_errors', 1);
 		ini_set('error_log', TMP_DIR . 'error.log.txt' );
+
+
+
+		class MVCUtilities {
+
+			public static function purgeSession()
+			{
+				$_SESSION = array();
+
+				// if ( ini_get("session.use_cookies") )
+				// {
+			    $params = session_get_cookie_params();
+			    
+			    setcookie(  session_name(),
+			    		    '',
+			    		    time() - 42000,
+			        		$params["path"],
+			        		$params["domain"],
+			        		$params["secure"],
+			        		$params["httponly"]	);
+				// }
+
+				session_destroy();
+			}
+
+			public static function requestSessionRegenerate()
+			{
+				if( USE_PHP_SESSIONS )
+				{
+					if( !defined('SESSION_HAS_REGENERATED')
+						|| !SESSION_HAS_REGENERATED )
+						session_regenerate_id(true);
+				}
+			}
+
+			public static function getClientHash()
+			{
+				return sha1("{$_SERVER["HTTP_USER_AGENT"]}|{$_SERVER['REMOTE_ADDR']}");
+			}
+		}
+
+
+
+		/**********************************************************************************
+		 *	Sessions
+		 **********************************************************************************/
+
+		if( USE_PHP_SESSIONS )
+		{
+			ini_set("session.use_only_cookies", 1);
+			ini_set('session.cookie_secure', 0);
+
+
+			if( !isset( $_SESSION['SEC_HASH'] ) )
+			{
+				$_SESSION['SEC_HASH'] = MVCUtilities::getClientHash();
+				$_SESSION['SEC_L_HTTPS'] = IS_HTTPS;
+			}
+
+			else
+			if( $_SESSION['SEC_HASH'] !== MVCUtilities::getClientHash() )
+			{
+				MVCUtilities::purgeSession();
+
+				header("Location: {$_SERVER["REQUEST_URI"]}");
+				exit;
+			}
+
+
+			if( $_SESSION['SEC_L_HTTPS'] !== IS_HTTPS )
+			{
+				session_regenerate_id(TRUE);
+				$_SESSION['SEC_L_HTTPS'] = IS_HTTPS;
+
+				DEFINE('SESSION_HAS_REGENERATED', true);
+			}
+			else
+				DEFINE('SESSION_HAS_REGENERATED', false);
+			
+		}
+
 		
-		
+
 		/**********************************************************************************
 		 *	EventStack
 		 **********************************************************************************/
@@ -96,7 +177,7 @@
 
 					foreach($stack->eventList as $e)
 					{
-						if( $e( $params ) === false )
+						if( call_user_func_array($e, $params ) === false )
 						{
 							$ret = false;
 							break;

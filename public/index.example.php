@@ -1,6 +1,12 @@
 <?php
 
-	// If sessions are going to be used, uncoment the next line
+	/*
+	 *	If you are going to use sessions, session_start() must be set here.
+	 *	To use a custom session name, session_name() must be set before session_start()
+	 *
+	 *	You can use the builtin session management mechanism, enable it with the flag USE_PHP_SESSIONS in the config
+	 *
+	 */
 	//session_name('_changeme_session');
 	//session_start();
 

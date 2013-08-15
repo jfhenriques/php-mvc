@@ -22,6 +22,7 @@
 
 		DEFINE('HELPERS_DIR', ROOT .  DS . 'helpers' . DS );
 
+		
 
 	/*
 	 * Include everything needed by the framework
@@ -32,7 +33,7 @@
 		require_once( CONF_DIR . 'environment.conf.php' );
 		
 		require_once( HELPERS_DIR . 'commons.inc.php');
-		
+
 		require_once( HELPERS_DIR . 'router.inc.php');
 		require_once( HELPERS_DIR . 'template.inc.php');
 		require_once( HELPERS_DIR . 'model.inc.php');

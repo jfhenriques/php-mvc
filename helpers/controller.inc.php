@@ -68,8 +68,12 @@
 		private $requireAuth = false;
 		private $requireMode = RESPOND_NONE;
 		protected $router = null;
+
+		private static $hasAuth = null;
 		
 		private static $authFunction = null;
+
+		private static $e_AuthError = null;
 		
 		
 		
@@ -93,39 +97,54 @@
 			if( !is_null( $mode ) )
 				$this->requireMode = $mode;
 		}
+
+		protected function __forceHTTPS()
+		{
+
+		}
 	
 
-		public function __checkAuth( $auth = true, $exit = false )
+		private function __checkAuth( $auth = true, $exit = false )
 		{
-			if( is_null( Controller::$authFunction ) )
-				return false;
-
-			$func = Controller::$authFunction;
-			$ret_val = $func();
-
-			if( $exit && $ret_val !== $auth )
+			if( is_null( self::$hasAuth ) )
 			{
-				if( $auth )
-					header('HTTP/1.0 403 Forbidden', true);
+				if( is_null( self::$authFunction ) )
+					return false;
 
-				$retType = Router::getInstance()->responseType() ;
-				$renderCode = $auth ? R_GLOB_ERR_MUST_AUTH : R_GLOB_ERR_MUST_NOT_AUTH ;
+				$func = self::$authFunction;
+				self::$hasAuth = $func();
+			}
 
-				if( $retType === RESPOND_JSON )
-				{
-					$this->respond->setJSONCode( $renderCode );
-					$this->respond->renderJSON();
-				}
+
+			if( $exit && self::$hasAuth !== $auth )
+			{
+				if( !is_null( self::$e_AuthError ) )
+					EventStack::execAll( self::$e_AuthError, $this, $auth );
 
 				else
-					echo $auth ? "403 Forbidden" : describeMessage($renderCode) ;
+				{
+					if( $auth )
+						header('HTTP/1.0 403 Forbidden', true);
 
+					$retType = Router::getInstance()->responseType() ;
+					$renderCode = $auth ? R_GLOB_ERR_MUST_AUTH : R_GLOB_ERR_MUST_NOT_AUTH ;
 
-				exit (1);
+					if( $retType === RESPOND_JSON )
+					{
+						$this->respond->setJSONCode( $renderCode );
+						$this->respond->renderJSON();
+					}
 
+					else
+						echo $auth ? "403 Forbidden" : describeMessage($renderCode) ;
+
+				}
+
+				exit;
 			}
+
 			
-			return $ret_val === $auth;
+			return self::$hasAuth === $auth;
 		}
 
 
@@ -141,6 +160,11 @@
 		public function requireNoAuth()
 		{
 			return $this->__checkAuth(false, true);
+		}
+
+		public static function hasAuth()
+		{
+			return self::$hasAuth;
 		}
 
 
@@ -176,8 +200,19 @@
 		}
 
 		
-		public static function registerAuthFunction( $func )
+		public static function registerAuthFunction( callable $func )
 		{
 			Controller::$authFunction = &$func;
+		}
+
+
+
+
+		public static function registerOnAuthError(callable $e)
+		{
+			if( is_null( self::$e_AuthError ) )
+				self::$e_AuthError = new EventStack();
+
+			self::$e_AuthError->register( $e );
 		}
 	}

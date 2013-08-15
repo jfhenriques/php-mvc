@@ -13,7 +13,7 @@
 	class Router {
 		
 		private static $instance = null;
-		private static $eventOnConstruct = null;
+		private static $e_Construct = null;
 		
 		private $url = null;
 		private $cachedRoutes = null;
@@ -70,7 +70,7 @@
 
 			// Process onConstruct Events
 
-			EventStack::execAll( self::$eventOnConstruct );
+			EventStack::execAll( self::$e_Construct );
 		}
 		
 		public static function getInstance()
@@ -83,10 +83,10 @@
 
 		public static function registerOnConstruct(callable $e)
 		{
-			if( is_null( self::$eventOnConstruct ) )
-				self::$eventOnConstruct = new EventStack();
+			if( is_null( self::$e_Construct ) )
+				self::$e_Construct = new EventStack();
 
-			self::$eventOnConstruct->register( $e);
+			self::$e_Construct->register( $e );
 		}
 		
 		private static function getNext(&$i, $arr)
@@ -108,7 +108,8 @@
 					$arr[$key] = array();
 			}
 		}
-		
+
+
 		public static function hasNext($i, $arr)
 		{
 			for( ; $i < count( $arr ); $i++)
