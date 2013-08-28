@@ -167,7 +167,7 @@
 			return $route;
 		}*/
 
-		public function getPath($named_route, $arrIn = array(), $format = 'html')
+		public function getPath($named_route, $arrIn = array(), $full = false, $https = true, $format = 'html' )
 		{
 			$route = null;
 
@@ -175,9 +175,12 @@
 				!isset( $this->cachedNamedRoutes[$named_route] ) )
 				return false;
 
+			$https = is_null( $https ) ? false : ( IS_HTTPS || $https ) ;
+			$host   = $full ? ( ( $https ? 'https' : 'http' ) . "://{$_SERVER['SERVER_NAME']}" ) : '' ;
 			$format = is_null( $format ) ? '' : ".{$format}";
 
-			$route = "/" . BASE_URI . "{$this->cachedNamedRoutes[$named_route]}{$format}";
+
+			$route = "{$host}/" . BASE_URI . "{$this->cachedNamedRoutes[$named_route]}{$format}";
 
 			$t_elems = ( is_array( $arrIn ) ? count( $arrIn ) : 0 );
 
@@ -234,7 +237,7 @@
 				return str_replace( array('#', ':'), array('', ''), $name );
 			}
 			
-			function insertMethod( $controller, $name, $method, $action, &$output )
+			function insertMethod( $controller, $name, $method, $action, $https, &$output )
 			{
 				if( strlen( $name ) == 0 || !is_array($output) )
 					return;
@@ -245,7 +248,10 @@
 				Router::add_key_to_array( $key, $output[$name] );
 			
 				$output[$name][$key] = array( 'c' => strtolower( $controller ),
-											  'a' => $action 		);
+											  'a' => $action ) ;
+
+				if( $https )
+					$output[$name][$key]['s'] = true;
 			}
 
 
@@ -285,6 +291,7 @@
 					$arr = array();			
 				
 				$controller = verifyName( isset( $arr['controller'] ) ? $arr['controller'] : $controller ) ;
+				$https = isset( $arr['https'] ) && $arr['https'] ;
 				
 				if( $isResource )
 				{
@@ -298,19 +305,19 @@
 					$hasPlus = false;
 
 					$named_var_count++;
-					$named_resource = $named_resource ;
+					//$named_resource = $named_resource ;
 					//$named_resource_plus = "{$named_resource}/%{$named_var_count}" ;
 					$named_resource_plus = build_named_route_path($named_resource, $named_var_count, true);
 					
 					if( checkInArray('index', $only) )
 					{
-						insertMethod($controller, $name, 'get', 'index', $output);
+						insertMethod($controller, $name, 'get', 'index', $https, $output);
 						$hasNormal = true;
 					}
 					
 					if( checkInArray('create', $only) )
 					{
-						insertMethod($controller, $name, 'post', 'create', $output);
+						insertMethod($controller, $name, 'post', 'create', $https, $output);
 						$hasNormal = true;
 					}
 					
@@ -319,25 +326,25 @@
 
 					if( checkInArray('new', $only) )
 					{
-						insertMethod($controller, 'new', 'get', 'mnew', $output[$name]);
+						insertMethod($controller, 'new', 'get', 'mnew', $https, $output[$name]);
 						$named_array["{$named_key}_new"] = build_named_route_path($named_resource_plus, 'new'); //"{$named_resource_plus}/new";
 					}
 
 					if( checkInArray('show', $only) )
 					{
-						insertMethod($controller, $id, 'get', 'show', $output[$name]);
+						insertMethod($controller, $id, 'get', 'show', $https, $output[$name]);
 						$hasPlus = true;
 					}
 						
 					if( checkInArray('update', $only) )
 					{
-						insertMethod($controller, $id, 'put', 'update', $output[$name]);
+						insertMethod($controller, $id, 'put', 'update', $https, $output[$name]);
 						$hasPlus = true;
 					}
 
 					if( checkInArray('destroy', $only) )
 					{
-						insertMethod($controller, $id, 'delete', 'destroy', $output[$name]);
+						insertMethod($controller, $id, 'delete', 'destroy', $https, $output[$name]);
 						$hasPlus = true;
 					}
 
@@ -348,7 +355,7 @@
 					{
 						Router::add_key_to_array( $id, $output[$name] );
 							
-						insertMethod($controller, 'edit', 'get', 'edit', $output[$name][$id]);
+						insertMethod($controller, 'edit', 'get', 'edit', $https, $output[$name][$id]);
 						$named_array["{$named_key}_edit"] = build_named_route_path($named_resource_plus, 'edit'); //"{$named_resource_plus}/edit";
 					}
 				}
@@ -358,7 +365,7 @@
 					{
 						$via = isset( $arr['via'] ) ? $arr['via'] : 'get' ;
 					
-						insertMethod($controller, $name, $via, $arr['action'], $output);
+						insertMethod($controller, $name, $via, $arr['action'], $https, $output);
 
 						$named_key = ( isset( $arr['as'] ) && $arr['as'] !== '' ) ?
 											$arr['as'] :
@@ -654,8 +661,14 @@
 				{
 					$act = $lastValue[ $key ] ;
 					
-					if( isset( $act['a'] ) && isset( $act['c'] ) )
+					if(    isset( $act['a'] )
+						&& isset( $act['c'] )
+						&& (    !isset( $act['s'] )
+							 || !$act['s']
+							 || $act['s'] === IS_HTTPS )
+						)
 					{
+
 						if( $key === "#PUT" || $key === "#DELETE" )
 						{
 							require_once(MULTIPART_FILE);

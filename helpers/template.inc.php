@@ -111,9 +111,9 @@
 			exit;
 		}
 
-		public function gotoLocation( $named_route, $array = array(), $default = 'html' )
+		public function gotoLocation( $named_route, $array = array(), $https = false, $default = 'html' )
 		{
-			$this->gotoLocationDirect( $this->router->getPath( $named_route, $array, $default ) );
+			$this->gotoLocationDirect( $this->router->getPath( $named_route, $array, true, $https, $default ) );
 		}
 
 		public function gotoLocationDirect( $location )
@@ -208,16 +208,46 @@
 			}
 		}
 
-		private function init_form($name, $named_route, $named_route_arr = array(), $method = "POST", $class = "")
+		// private function init_form($name, $named_route, $named_route_arr = array(), $method = "POST", $class = "")
+		// {
+		// 	$rand = Controller::genRand64();
+
+		// 	$_SESSION['forms'][$name] = $rand ;
+
+		// 	return    "<form name=\"{$name}\" id=\"{$name}\" action=\"{$this->router->getPath($named_route, $named_route_arr)}\" method=\"{$method}\" "
+		// 			. "class=\"{$class}\">\n<input type=\"hidden\" name=\"ctrlcode\" value=\"{$rand}\" />\n";
+
+		// }
+
+		private function init_form($name, $path, $method = null, $class = null)
 		{
 			$rand = Controller::genRand64();
 
+			if( is_null( $method ) )
+				$method = "POST";
+
+			$class = is_null( $class ) ? '' : " class=\"{$class}\"" ;
+
+
 			$_SESSION['forms'][$name] = $rand ;
 
-			return    "<form name=\"{$name}\" id=\"{$name}\" action=\"{$this->router->getPath($named_route, $named_route_arr)}\" method=\"{$method}\" "
-					. "class=\"{$class}\">\n<input type=\"hidden\" name=\"ctrlcode\" value=\"{$rand}\" />\n";
+			return    "<form name=\"{$name}\" id=\"{$name}\" action=\"{$path}\" method=\"{$method}\"{$class}>\n"
+					. "<input type=\"hidden\" name=\"ctrlcode\" value=\"{$rand}\" />\n";
 
 		}
+		private function init_form_route($name, $named_route, $named_route_arr = array(), $method = null, $class = null)
+		{
+			$path = $this->router->getPath($named_route, $named_route_arr);
+
+			return $this->init_form($name, $path, $method, $class);
+		}
+		private function init_form_route_https($name, $named_route, $named_route_arr = array(), $method = null, $class = null)
+		{
+			$path = $this->router->getPath($named_route, $named_route_arr, true, true);
+
+			return $this->init_form($name, $path, $method, $class);
+		}
+
 		private function end_form()
 		{
 			return "</form>\n";

@@ -74,6 +74,7 @@
 		private static $authFunction = null;
 
 		private static $e_AuthError = null;
+		private static $e_OnLoad = null;
 		
 		
 		
@@ -88,6 +89,9 @@
 			if(    $this->requireMode !== RESPOND_NONE
 				&& $router->responseType() !== $this->requireMode )
 				$router->generate404();
+
+			if( !is_null( self::$e_OnLoad ) )
+				EventStack::execAll( self::$e_OnLoad, $this );
 		}
 		
 		protected function __configure() {}
@@ -96,11 +100,6 @@
 		{
 			if( !is_null( $mode ) )
 				$this->requireMode = $mode;
-		}
-
-		protected function __forceHTTPS()
-		{
-
 		}
 	
 
@@ -215,4 +214,13 @@
 
 			self::$e_AuthError->register( $e );
 		}
+
+		public static function registerOnLoad(callable $e)
+		{
+			if( is_null( self::$e_OnLoad ) )
+				self::$e_OnLoad = new EventStack();
+
+			self::$e_OnLoad->register( $e );
+		}
+
 	}
