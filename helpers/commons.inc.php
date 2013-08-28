@@ -96,7 +96,13 @@
 
 			public static function getClientHash()
 			{
-				return sha1("{$_SERVER["HTTP_USER_AGENT"]}|{$_SERVER['REMOTE_ADDR']}");
+				$ua = isset( $_SERVER["HTTP_USER_AGENT"] ) ? $_SERVER["HTTP_USER_AGENT"] : null ;
+				$ra = isset( $_SERVER["REMOTE_ADDR"] ) ? $_SERVER["REMOTE_ADDR"] : null ;
+				$aa = isset( $_SERVER["HTTP_ACCEPT"] ) ? $_SERVER["HTTP_ACCEPT"] : null ;
+				$ae = isset( $_SERVER["HTTP_ACCEPT_ENCODING"] ) ? $_SERVER["HTTP_ACCEPT_ENCODING"] : null ;
+				$al = isset( $_SERVER["HTTP_ACCEPT_LANGUAGE"] ) ? $_SERVER["HTTP_ACCEPT_LANGUAGE"] : null ;
+
+				return hash('sha256', "{$ua}|{$ra}|{$aa}|{$ae}|{$al}");
 			}
 		}
 
