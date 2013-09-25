@@ -7,6 +7,8 @@ ErrorDocument 404 /404.html
 RewriteEngine On
 RewriteBase /
 
+#php_value session.cookie_path /
+
 RewriteRule ^index\.example\.php$ - [R=404,L]
 
 RewriteCond %{REQUEST_FILENAME} !-f
