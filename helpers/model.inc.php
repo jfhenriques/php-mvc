@@ -45,6 +45,14 @@
 			return ( $this->data[$key] = $default );
 		}
 
+		protected function saveCache($prefix, $id)
+		{
+			$id_key = CommonCache::buildVarName($prefix, $id);
+			$cc = CommonCache::getInstance();
+
+			return $cc->set( $id_key, $this->data ) ;
+		}
+
 		protected static function fillModel($data, $model)
 		{
 			if( !is_array( $data ) || count( $data ) <= 0 )
@@ -95,6 +103,8 @@
 					}
 				}
 			}
+
+			return false;
 		}
 		
 		
