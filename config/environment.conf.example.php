@@ -4,6 +4,14 @@
 	 *	Must always be set to false on prodution environments
 	 */
 	DEFINE('DEVELOPMENT_ENVIRONMENT', false );
+
+
+	/* 
+	 *	Where to retreive the routes from
+	 */
+	DEFINE('ROUTE_EXTRACT', isset( $_SERVER['REDIRECT_PHP_MVC_ROUTE'] ) ?
+									$_SERVER['REDIRECT_PHP_MVC_ROUTE']
+									: null );
 	
 	
 	/*

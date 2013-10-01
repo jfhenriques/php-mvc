@@ -14,5 +14,6 @@ RewriteRule ^index\.example\.php$ - [R=404,L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 
-RewriteRule ^(.*)$ index.php?z_url=$1 [QSA,PT,L]
+#RewriteRule ^(.*)$ index.php?z_url=$1 [QSA,PT,L]
+RewriteRule ^(.*)$ index.php [E=PHP_MVC_ROUTE:$1,QSA,PT,L]
 

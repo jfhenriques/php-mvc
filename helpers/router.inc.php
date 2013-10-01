@@ -34,7 +34,7 @@
 		
 		private function __construct()
 		{
-			$this->url = ( isset( $_REQUEST['z_url' ] ) && strlen( $_REQUEST['z_url' ] ) > 0 ) ? $_REQUEST['z_url' ] : "" ;
+			$this->url = ROUTE_EXTRACT ; // ( isset( $_REQUEST['z_url' ] ) && strlen( $_REQUEST['z_url' ] ) > 0 ) ? $_REQUEST['z_url' ] : "" ;
 			
 			$cc = CommonCache::getInstance();
 
@@ -564,14 +564,16 @@
 		
 		public function dispatch()
 		{
-		
+
 			if( $this->is_root( $this->url ) && $this->is_default_root_valid( $this->cachedRoutes ) )
 			{
 				header('Location: ' . $this->cachedRoutes['root'], true);
 			
 				exit;
 			}
-			
+
+			if( is_null( $this->url ) )
+				throw new Exception("NULL route received");			
 			
 			$i = 0;
 			$next = 0;
